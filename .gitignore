@@ -1,0 +1,15 @@
+# Go build artifacts
+/bin/
+/pkg/
+/*.exe
+/*.out
+/*.test
+
+# IDE/Editor directories and files
+.idea/
+.vscode/
+*.swp
+
+# Environment files 
+.env
+.env.local
