@@ -6,6 +6,6 @@ export const shortenUrl = async (originalUrl: string) => {
     return res.data as string;
   } catch (error) {
     console.log("Error Shortening Url ", error);
-    return null;
+    throw error
   }
 };
