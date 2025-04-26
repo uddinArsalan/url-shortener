@@ -1,11 +1,16 @@
 <script>
   import { Menu, X, BarChart3, User, LogIn } from "@lucide/svelte";
+  import { login } from "$lib/api/auth";
 
   let isLoggedIn = false;
   let isMobileMenuOpen = false;
 
   function toggleMobileMenu() {
     isMobileMenuOpen = !isMobileMenuOpen;
+  }
+  async function handleLogin() {
+    // await login();
+    window.location.href = 'http://localhost:4000/auth/login';
   }
 </script>
 
@@ -65,6 +70,7 @@
             <button
               class="text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               aria-label="Log in"
+              on:click={handleLogin}
             >
               <LogIn size={18} class="mr-1" />
               Login
@@ -132,6 +138,7 @@
             </button>
             <button
               class="w-full text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center"
+              on:click={handleLogin}
             >
               <LogIn size={18} class="mr-1" />
               Login

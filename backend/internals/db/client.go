@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	// _ "github.com/go-sql-driver/mysql"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
 )
@@ -16,33 +15,38 @@ import (
 var db *sql.DB
 
 type User struct {
-	ID           int64
-	Username     string
-	Email        string
-	PasswordHash string
-	CreatedAt    string
+	ID        int64
+	Username  string
+	Email     string
+	CreatedAt string
 }
 
 type URL struct {
-	ID int64
+	ID          int64
 	OriginalUrl string
-	ShortCode string
-	UserId int64
-	CreatedAt string
-	Clicks int32
+	ShortCode   string
+	UserId      int64
+	CreatedAt   string
+	Clicks      int32
 }
 
 func InitDBClient() {
-	DATABASE_NAME := os.Getenv("DATABASE_NAME")
-	DATABASE_HOST := os.Getenv("DATABASE_HOST")
-	DATABASE_USER := os.Getenv("DATABASE_USER")
-	DATABASE_PASSWORD := os.Getenv("DATABASE_PASSWORD")
+	// DATABASE_NAME := os.Getenv("DATABASE_NAME")
+	// DATABASE_HOST := os.Getenv("DATABASE_HOST")
+	// DATABASE_USER := os.Getenv("DATABASE_USER")
+	// DATABASE_PASSWORD := os.Getenv("DATABASE_PASSWORD")
 
-	connStr := fmt.Sprintf("user='%s' password=%s host=%s dbname=%s", DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME)
-
+	// connStr := fmt.Sprintf("user='%s' password=%s host=%s dbname=%s", DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME)
 	// dbUri := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", DB_USERNAME, DB_PASSWORD, DB_HOST, DB_NAME)
-
-	db, _ = sql.Open("postgres", connStr)
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+	var err error
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("sql.Open failed: %v", err)
+	}
 
 	if err := db.Ping(); err != nil {
 		db.Close()
@@ -61,14 +65,17 @@ func CreateUserTable() {
 	id BIGINT PRIMARY KEY ,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)
 	`
 	data, err := db.Exec(query)
 
 	if err == nil {
-		fmt.Println("Users Table Created ", data)
+		rowsAffected, err := data.RowsAffected()
+		if err != nil {
+			log.Fatalf("Error fetching rows affected: %v", err)
+		}
+		fmt.Printf("Users Table Created, Rows Affected: %d\n", rowsAffected)
 	} else {
 		log.Fatalf("Error creating users table %v", err)
 	}
@@ -86,11 +93,15 @@ func CreateUrlTable() {
     clicks INT DEFAULT 0
 	)
 	`
-	res, err := db.Exec(query)
+	data, err := db.Exec(query)
 	if err == nil {
-		fmt.Println("Url Table Created ", res)
+		rowsAffected, err := data.RowsAffected()
+		if err != nil {
+			log.Fatalf("Error fetching rows affected: %v", err)
+		}
+		fmt.Printf("Url Table Created, Rows Affected: %d\n", rowsAffected)
 	} else {
-		log.Fatalf("Error creating Url table %v", err)
+		log.Fatalf("Error creating url table %v", err)
 	}
 }
 
@@ -104,9 +115,13 @@ func CreateAnalyticsTable() {
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)
 	`
-	res, err := db.Exec(query)
+	data, err := db.Exec(query)
 	if err == nil {
-		fmt.Println("Analytics Table Created ", res)
+		rowsAffected, err := data.RowsAffected()
+		if err != nil {
+			log.Fatalf("Error fetching rows affected: %v", err)
+		}
+		fmt.Printf("Analytics Table Created, Rows Affected: %d\n", rowsAffected)
 	} else {
 		log.Fatalf("Error creating Analytics table %v", err)
 	}
@@ -131,27 +146,26 @@ func FindUrlFromShortCode(shortCode string) (string, error) {
 	return originalURL, nil
 }
 
-func InsertUser(user User) {
+func InsertUser(user User) error {
 	node, err := snowflake.NewNode(1)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return fmt.Errorf("failed to create snowflake node: %w", err)
+
 	}
 	id := node.Generate()
-	query := `INSERT INTO users (id,username, email,password_hash, created_at) VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT INTO users (id,username, email, created_at) VALUES ($1, $2, $3, $4)`
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("failed to prepare insert statement: %w", err)
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(id.Int64(), user.Username, user.Email, user.PasswordHash, time.Now())
+	_, err = stmt.Exec(id.Int64(), user.Username, user.Email, time.Now())
 	if err != nil {
-		log.Fatalf("Error inserting data in users table %v", err)
-	} else {
-		fmt.Println("User inserted successfully!")
+		return fmt.Errorf("failed to execute insert: %w", err)
 	}
-	fmt.Println(result)
+	fmt.Println("User inserted successfully!")
+	return nil
 }
 
 func FindUserByEmail(email string) (User, error) {
@@ -189,7 +203,7 @@ func InsertUrl(url URL) {
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now(),url.Clicks)
+	result, err := stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now(), url.Clicks)
 	if err != nil {
 		log.Fatalf("Error inserting data in urls table %v", err)
 	} else {
