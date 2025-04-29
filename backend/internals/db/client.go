@@ -188,6 +188,26 @@ func FindUserByEmail(email string) (User, error) {
 	return user, nil
 }
 
+func FindUserByID(id int64) (User, error) {
+	query := `SELECT id, username, email, created_at FROM users WHERE id = $1`
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return User{}, fmt.Errorf("error preparing query: %w", err)
+	}
+	defer stmt.Close()
+	var user User
+
+	err = stmt.QueryRow(id).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return User{}, fmt.Errorf("no user found with id: %d", id)
+		}
+		return User{}, fmt.Errorf("error querying user: %w", err)
+	}
+	return user, nil
+}
+
 func InsertUrl(url URL) {
 	node, err := snowflake.NewNode(1)
 	if err != nil {

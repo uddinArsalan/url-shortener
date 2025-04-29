@@ -8,10 +8,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 	"url_shortener/internals/db"
 
 	"github.com/coreos/go-oidc/v3/oidc"
+	"github.com/golang-jwt/jwt/v5"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func generateRandString(nBytes int) (string, error) {
@@ -119,6 +122,30 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to find user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	log.Printf("User retrieved: %+v", user)
+	jwtSecretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
+	if len(jwtSecretKey) == 0 {
+		http.Error(w, "JWT secret key not set", http.StatusInternalServerError)
+		return
+	}
+	jwtClaims := jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+	}
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
+	tokenString, err := jwtToken.SignedString(jwtSecretKey)
+	if err != nil {
+		http.Error(w, "Failed to sign JWT: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   r.TLS != nil,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   int(time.Hour.Seconds()),
+	})
+	http.Redirect(w, r, "http://localhost:5173", http.StatusFound)
 }

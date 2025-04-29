@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/gorilla/mux"
@@ -43,15 +42,7 @@ func Start() {
 	r.HandleFunc("/url/{shortCode}", handler.RedirectURL).Methods("GET")
 	r.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
 	r.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
-	r.HandleFunc("/user", func(w http.ResponseWriter, r *http.Request) {
-		email := r.URL.Query().Get("email")
-		user, err := db.FindUserByEmail(email)
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(user)
-	})
-
+	r.HandleFunc("/me", handler.MeHandler).Methods("GET")
 	handler := cors.Default().Handler(r)
 
 	http.ListenAndServe(":4000", handler)

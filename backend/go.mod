@@ -13,6 +13,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.13.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hugocortes/go-keycloak v0.0.0-20181021232427-ad1c04b48ff6 // indirect
 	github.com/lib/pq v1.10.9 // indirect
