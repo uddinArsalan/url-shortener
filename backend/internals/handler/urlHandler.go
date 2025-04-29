@@ -13,11 +13,11 @@ import (
 )
 
 func generateShortCode() string {
-	rand.New(rand.NewSource(time.Now().Unix()))
+	r := rand.New(rand.NewSource(time.Now().Unix()))
 	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	code := make([]byte, 6)
 	for i := range code {
-		code[i] = chars[rand.Intn(len(chars))]
+		code[i] = chars[r.Intn(len(chars))]
 	}
 	return string(code)
 }
@@ -43,7 +43,7 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	}
 	db.InsertUrl(url)
 	fmt.Printf("\nUrl shortened from %s to %s", userUrl, shortCode)
-	w.Write(fmt.Appendf(nil, "http://localhost/url/%s", shortCode))
+	w.Write([]byte(fmt.Sprintf("http://localhost/url/%s", shortCode)))
 }
 
 func RedirectURL(w http.ResponseWriter, r *http.Request) {

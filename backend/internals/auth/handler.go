@@ -115,7 +115,7 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		}
 		err := db.InsertUser(user)
 		if err != nil {
-			log.Println(w, "Failed to insert user", err)
+			log.Println("Failed to insert user", err)
 			return
 		}
 	} else if err != nil {

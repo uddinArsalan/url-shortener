@@ -137,7 +137,7 @@ func FindUrlFromShortCode(shortCode string) (string, error) {
 	var originalURL string
 	er := stmt.QueryRow(shortCode).Scan(&originalURL)
 	if er != nil {
-		fmt.Printf("Error querying URL with given short code %v\n", err)
+		fmt.Printf("Error querying URL with given short code %v\n", er)
 		if er == sql.ErrNoRows {
 			return "", fmt.Errorf("no URL found for the given short code: %v", shortCode)
 		}
