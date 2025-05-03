@@ -53,6 +53,19 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, kc.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
 }
 
+func HandleLogout(w http.ResponseWriter, r *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
 func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 	verifier := kc.Provider.Verifier(kc.OIDCConfig)
@@ -96,10 +109,8 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 	oauth2Token.AccessToken = "*REDACTED*"
 
 	var claims struct {
-		Email         string `json:"email"`
-		EmailVerified bool   `json:"email_verified"`
-		Subject       string `json:"sub"`
-		Name          string `json:"name"`
+		Email string `json:"email"`
+		Name  string `json:"name"`
 	}
 
 	if err := idToken.Claims(&claims); err != nil {
@@ -113,7 +124,7 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			Username: claims.Name,
 			Email:    claims.Email,
 		}
-		err := db.InsertUser(user)
+		err = db.InsertUser(user)
 		if err != nil {
 			log.Println("Failed to insert user", err)
 			return

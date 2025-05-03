@@ -150,7 +150,6 @@ func InsertUser(user User) error {
 	node, err := snowflake.NewNode(1)
 	if err != nil {
 		return fmt.Errorf("failed to create snowflake node: %w", err)
-
 	}
 	id := node.Generate()
 	query := `INSERT INTO users (id,username, email, created_at) VALUES ($1, $2, $3, $4)`
@@ -180,10 +179,7 @@ func FindUserByEmail(email string) (User, error) {
 	err = stmt.QueryRow(email).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return User{}, fmt.Errorf("no user found with email: %s", email)
-		}
-		return User{}, fmt.Errorf("error querying user: %w", err)
+		return User{}, err
 	}
 	return user, nil
 }
@@ -208,26 +204,24 @@ func FindUserByID(id int64) (User, error) {
 	return user, nil
 }
 
-func InsertUrl(url URL) {
+func InsertUrl(url URL) error {
 	node, err := snowflake.NewNode(1)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return fmt.Errorf("failed to create snowflake node: %w", err)
 	}
 	id := node.Generate()
-	// 1902446527184375808
 	query := `INSERT INTO urls (id,original_url,shortcode,user_id, created_at,clicks) VALUES ($1, $2, $3, $4, $5, $6)`
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now(), url.Clicks)
+	_, err = stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now(), url.Clicks)
 	if err != nil {
 		log.Fatalf("Error inserting data in urls table %v", err)
-	} else {
-		fmt.Println("Urls inserted successfully!")
+		return err
 	}
-	fmt.Println(result)
+	fmt.Println("Urls inserted successfully!")
+	return nil
 }

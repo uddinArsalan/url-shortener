@@ -3,14 +3,13 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"github.com/golang-jwt/jwt/v5"
+	"log"
 	"net/http"
 	"os"
+	"url_shortener/internals/config"
+
+	"github.com/golang-jwt/jwt/v5"
 )
-
-type contextKey string
-
-const UserContextKey = contextKey("user")
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -20,10 +19,12 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			tokenStr = authHeader[len("Bearer "):]
 		} else {
 			cookie, err := r.Cookie("token")
+
 			if err != nil || cookie.Value == "" {
 				http.Error(w, "Unauthorized", http.StatusUnauthorized)
 				return
 			}
+
 			tokenStr = cookie.Value
 		}
 
@@ -44,7 +45,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), UserContextKey, claims)
+		ctx := context.WithValue(r.Context(), config.UserContextKey, claims)
+		log.Printf("User context: %v", ctx.Value(config.UserContextKey))
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

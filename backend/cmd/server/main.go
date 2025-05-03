@@ -30,20 +30,20 @@ func Start() {
 	}
 
 	r := mux.NewRouter()
-	r.Use(func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			middleware.PerClientRateLimiter(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-				next.ServeHTTP(writer, request)
-			})).ServeHTTP(w, r)
-		})
-	})
+	public := r.NewRoute().Subrouter()
+	public.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
+	public.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
+	protected := r.NewRoute().Subrouter()
+	protected.Use(middleware.PerClientRateLimiter)
+	protected.Use(middleware.AuthMiddleware)
+	protected.HandleFunc("/shorten", handler.ShortenURL).Methods("POST")
+	protected.HandleFunc("/auth/logout", auth.HandleLogout).Methods("GET")
+	protected.HandleFunc("/url/{shortCode}", handler.RedirectURL).Methods("GET")
+	protected.HandleFunc("/me", handler.MeHandler).Methods("GET")
+	handlerWithCors := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowCredentials: true,
+	}).Handler(r)
 
-	r.HandleFunc("/shorten", handler.ShortenURL).Methods("POST")
-	r.HandleFunc("/url/{shortCode}", handler.RedirectURL).Methods("GET")
-	r.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
-	r.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
-	r.HandleFunc("/me", handler.MeHandler).Methods("GET")
-	handler := cors.Default().Handler(r)
-
-	http.ListenAndServe(":4000", handler)
+	http.ListenAndServe(":4000", handlerWithCors)
 }

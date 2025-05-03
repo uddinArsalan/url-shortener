@@ -6,8 +6,10 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+	"url_shortener/internals/config"
 	"url_shortener/internals/db"
 
+	// "config"
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
 )
@@ -29,6 +31,11 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("No url provided to shorten")
 		return
 	}
+	userID, er := config.GetUserIDFromContext(r.Context())
+	if er != nil {
+		http.Error(w, er.Message, er.Status)
+		return
+	}
 	shortCode := generateShortCode()
 	rdb := db.GetRedisClient()
 	ctx := context.Background()
@@ -39,11 +46,15 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	url := db.URL{
 		OriginalUrl: userUrl,
 		ShortCode:   shortCode,
-		UserId:      1902446527184375808,
+		UserId:      userID,
 	}
-	db.InsertUrl(url)
+	if err := db.InsertUrl(url); err != nil {
+		http.Error(w, "Failed to save URL to database", http.StatusInternalServerError)
+		fmt.Printf("Error inserting URL into database: %v\n", err)
+		return
+	}
 	fmt.Printf("\nUrl shortened from %s to %s", userUrl, shortCode)
-	w.Write([]byte(fmt.Sprintf("http://localhost/url/%s", shortCode)))
+	w.Write(fmt.Appendf(nil, "http://localhost/url/%s", shortCode))
 }
 
 func RedirectURL(w http.ResponseWriter, r *http.Request) {

@@ -1,17 +1,46 @@
-<script>
+<script lang="ts">
+  interface UserType {
+    ID: number;
+    Username: string;
+    Email: string;
+    CreatedAt
+: string;
+  }
   import { Menu, X, BarChart3, User, LogIn } from "@lucide/svelte";
-  import { login } from "$lib/api/auth";
+  import { fetchUser } from "$lib/api/auth";
+  import { onMount } from "svelte";
 
-  let isLoggedIn = false;
-  let isMobileMenuOpen = false;
+  let user = $state<UserType | null>(null);
+  let isLoggedIn = $state(false);
+  let isMobileMenuOpen = $state(false);
+
+  onMount(async () => {
+    try {
+      const userDetails = await fetchUser();
+      user = userDetails;
+      isLoggedIn = true;
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      user = null;
+    }
+  });
+
 
   function toggleMobileMenu() {
     isMobileMenuOpen = !isMobileMenuOpen;
   }
   async function handleLogin() {
-    // await login();
-    window.location.href = 'http://localhost:4000/auth/login';
+    window.location.href = "http://localhost:4000/auth/login";
+    try {
+      const userDetails = await fetchUser();
+      user = userDetails;
+      isLoggedIn = true;
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      user = null;
+    }
   }
+  $inspect(user)
 </script>
 
 <nav class="bg-white border-b shadow-sm">
@@ -57,20 +86,16 @@
               aria-label="View profile"
             >
               <User size={24} />
+              <div>{user?.Username}</div>
             </a>
           </div>
         {:else}
           <div class="flex items-center space-x-4">
-            <button
-              class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 px-4 rounded-md shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              aria-label="Sign up"
-            >
-              Sign Up
-            </button>
+            
             <button
               class="text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               aria-label="Log in"
-              on:click={handleLogin}
+              onclick={handleLogin}
             >
               <LogIn size={18} class="mr-1" />
               Login
@@ -85,7 +110,7 @@
           class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
           aria-controls="mobile-menu"
           aria-expanded={isMobileMenuOpen}
-          on:click={toggleMobileMenu}
+          onclick={toggleMobileMenu}
         >
           <span class="sr-only"
             >{isMobileMenuOpen ? "Close menu" : "Open menu"}</span
@@ -138,7 +163,7 @@
             </button>
             <button
               class="w-full text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center"
-              on:click={handleLogin}
+              onclick={handleLogin}
             >
               <LogIn size={18} class="mr-1" />
               Login

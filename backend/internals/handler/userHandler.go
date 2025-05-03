@@ -3,22 +3,17 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"url_shortener/internals/config"
 	"url_shortener/internals/db"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
-type contextKey string
-
-const UserContextKey = contextKey("user")
-
 func MeHandler(w http.ResponseWriter, r *http.Request) {
-	claims, ok := r.Context().Value(UserContextKey).(jwt.MapClaims)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	userID, er := config.GetUserIDFromContext(r.Context())
+	if er != nil {
+		http.Error(w, er.Message, er.Status)
 		return
 	}
-	user, err := db.FindUserByID(claims["sub"].(int64))
+	user, err := db.FindUserByID(userID)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return

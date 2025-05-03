@@ -14,7 +14,7 @@ type Message struct {
 	Body   string `json:"body"`
 }
 
-func PerClientRateLimiter(next func(w http.ResponseWriter, r *http.Request)) http.Handler {
+func PerClientRateLimiter(next http.Handler) http.Handler {
 	type client struct {
 		limiter  *rate.Limiter
 		lastSeen time.Time
@@ -60,6 +60,6 @@ func PerClientRateLimiter(next func(w http.ResponseWriter, r *http.Request)) htt
 			return
 		}
 		mu.Unlock()
-		next(w, r)
+		next.ServeHTTP(w, r)
 	})
 }
