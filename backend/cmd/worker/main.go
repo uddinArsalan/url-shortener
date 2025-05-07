@@ -62,7 +62,7 @@ func processClickQueue() {
 
 func main() {
 	if err := db.InitRedis(); err != nil {
-        log.Fatalf("Failed to initialize Redis: %v", err)
+      log.Fatalf("Failed to initialize Redis: %v", err)
     }
 	processClickQueue()
 }
