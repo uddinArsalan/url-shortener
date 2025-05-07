@@ -30,10 +30,12 @@ func Start() {
 	}
 
 	r := mux.NewRouter()
-	public := r.NewRoute().Subrouter()
+	apiRouter := r.PathPrefix("/api/v1").Subrouter()
+
+	public := apiRouter.NewRoute().Subrouter()
 	public.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
 	public.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
-	protected := r.NewRoute().Subrouter()
+	protected := apiRouter.NewRoute().Subrouter()
 	protected.Use(middleware.PerClientRateLimiter)
 	protected.Use(middleware.AuthMiddleware)
 	protected.HandleFunc("/shorten", handler.ShortenURL).Methods("POST")

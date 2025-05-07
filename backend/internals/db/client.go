@@ -3,41 +3,18 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
-	"os"
-	"time"
-
 	"github.com/bwmarrin/snowflake"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
+	"log"
+	"os"
+	"time"
+	"url_shortener/models"
 )
 
 var db *sql.DB
 
-type User struct {
-	ID        int64
-	Username  string
-	Email     string
-	CreatedAt string
-}
-
-type URL struct {
-	ID          int64
-	OriginalUrl string
-	ShortCode   string
-	UserId      int64
-	CreatedAt   string
-	Clicks      int32
-}
-
 func InitDBClient() {
-	// DATABASE_NAME := os.Getenv("DATABASE_NAME")
-	// DATABASE_HOST := os.Getenv("DATABASE_HOST")
-	// DATABASE_USER := os.Getenv("DATABASE_USER")
-	// DATABASE_PASSWORD := os.Getenv("DATABASE_PASSWORD")
-
-	// connStr := fmt.Sprintf("user='%s' password=%s host=%s dbname=%s", DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME)
-	// dbUri := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", DB_USERNAME, DB_PASSWORD, DB_HOST, DB_NAME)
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		log.Fatal("DATABASE_URL is not set")
@@ -65,7 +42,7 @@ func CreateUserTable() {
 	id BIGINT PRIMARY KEY ,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP
 	)
 	`
 	data, err := db.Exec(query)
@@ -89,8 +66,7 @@ func CreateUrlTable() {
 	original_url TEXT NOT NULL,
 	shortcode VARCHAR(7) UNIQUE NOT NULL,
 	user_id BIGINT references users(id),
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    clicks INT DEFAULT 0
+	created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP,
 	)
 	`
 	data, err := db.Exec(query)
@@ -110,9 +86,14 @@ func CreateAnalyticsTable() {
 	CREATE TABLE IF NOT EXISTS analytics(
 	id BIGINT PRIMARY KEY,
 	url_id BIGINT REFERENCES urls(id), 
-	ip_address VARCHAR(45),
-    user_agent TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	ip_hash VARCHAR(64) NOT NULL,
+    country VARCHAR(50),
+    city VARCHAR(100),
+    os VARCHAR(50),
+    browser VARCHAR(50),
+    device VARCHAR(20),
+    referrer TEXT,
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 	)
 	`
 	data, err := db.Exec(query)
@@ -146,7 +127,7 @@ func FindUrlFromShortCode(shortCode string) (string, error) {
 	return originalURL, nil
 }
 
-func InsertUser(user User) error {
+func InsertUser(user models.User) error {
 	node, err := snowflake.NewNode(1)
 	if err != nil {
 		return fmt.Errorf("failed to create snowflake node: %w", err)
@@ -167,61 +148,76 @@ func InsertUser(user User) error {
 	return nil
 }
 
-func FindUserByEmail(email string) (User, error) {
+func FindUserByEmail(email string) (models.User, error) {
 	query := `SELECT id, username, email, created_at FROM users WHERE email = $1`
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		return User{}, fmt.Errorf("error preparing query: %w", err)
+		return models.User{}, fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
-	var user User
+	var user models.User
 
 	err = stmt.QueryRow(email).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
 
 	if err != nil {
-		return User{}, err
+		return models.User{}, err
 	}
 	return user, nil
 }
 
-func FindUserByID(id int64) (User, error) {
+func FindUserByID(id int64) (models.User, error) {
 	query := `SELECT id, username, email, created_at FROM users WHERE id = $1`
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		return User{}, fmt.Errorf("error preparing query: %w", err)
+		return models.User{}, fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
-	var user User
+	var user models.User
 
 	err = stmt.QueryRow(id).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return User{}, fmt.Errorf("no user found with id: %d", id)
+			return models.User{}, fmt.Errorf("no user found with id: %d", id)
 		}
-		return User{}, fmt.Errorf("error querying user: %w", err)
+		return models.User{}, fmt.Errorf("error querying user: %w", err)
 	}
 	return user, nil
 }
 
-func InsertUrl(url URL) error {
+func InsertUrl(url models.URL) error {
 	node, err := snowflake.NewNode(1)
 	if err != nil {
 		return fmt.Errorf("failed to create snowflake node: %w", err)
 	}
 	id := node.Generate()
-	query := `INSERT INTO urls (id,original_url,shortcode,user_id, created_at,clicks) VALUES ($1, $2, $3, $4, $5, $6)`
+	query := `INSERT INTO urls (id,original_url,shortcode,user_id, created_at) VALUES ($1, $2, $3, $4, $5)`
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now(), url.Clicks)
+	_, err = stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now())
 	if err != nil {
 		log.Fatalf("Error inserting data in urls table %v", err)
 		return err
 	}
 	fmt.Println("Urls inserted successfully!")
+	return nil
+}
+
+func InsertAnalyticsData(clicksData models.ClickAnalytics) error {
+	query := `INSERT INTO analytics (id,url_id,ip_hash,country, city,os,browser,device,referrer,timestamp) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10)`
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return fmt.Errorf("error preparing query: %w", err)
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(clicksData.ID.Int64(), clicksData.ShortCode, clicksData.Ip, clicksData.Country, clicksData.City, clicksData.Os, clicksData.Browser, clicksData.Device, clicksData.Referer, clicksData.Timestamp)
+	if err != nil {
+		log.Fatalf("Error inserting data in analytics table %v", err)
+		return err
+	}
 	return nil
 }

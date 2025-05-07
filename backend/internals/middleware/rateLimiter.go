@@ -54,7 +54,6 @@ func PerClientRateLimiter(next http.Handler) http.Handler {
 				Status: "Request Failed",
 				Body:   "The API is at capacity, try again later.",
 			}
-
 			w.WriteHeader(http.StatusTooManyRequests)
 			json.NewEncoder(w).Encode(&message)
 			return

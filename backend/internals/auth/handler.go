@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 	"url_shortener/internals/db"
+	"url_shortener/models"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/golang-jwt/jwt/v5"
@@ -63,7 +64,7 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
 func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +121,7 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 
 	user, err := db.FindUserByEmail(claims.Email)
 	if err == sql.ErrNoRows {
-		user = db.User{
+		user = models.User{
 			Username: claims.Name,
 			Email:    claims.Email,
 		}

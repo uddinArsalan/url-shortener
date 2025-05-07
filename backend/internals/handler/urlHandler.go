@@ -8,6 +8,7 @@ import (
 	"time"
 	"url_shortener/internals/config"
 	"url_shortener/internals/db"
+	"url_shortener/models"
 
 	// "config"
 	"github.com/gorilla/mux"
@@ -43,7 +44,7 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save URL", http.StatusInternalServerError)
 		return
 	}
-	url := db.URL{
+	url := models.URL{
 		OriginalUrl: userUrl,
 		ShortCode:   shortCode,
 		UserId:      userID,

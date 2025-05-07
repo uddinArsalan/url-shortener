@@ -17,10 +17,14 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/hugocortes/go-keycloak v0.0.0-20181021232427-ad1c04b48ff6 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/mssola/useragent v1.0.0 // indirect
+	github.com/oschwald/geoip2-golang v1.11.0 // indirect
+	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/redis/go-redis/v9 v9.7.1 // indirect
 	github.com/rs/cors v1.11.1 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
 	golang.org/x/oauth2 v0.28.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
 )
 
