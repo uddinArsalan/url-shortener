@@ -3,13 +3,15 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"time"
+	"url_shortener/models"
+
 	"github.com/bwmarrin/snowflake"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
-	"log"
-	"os"
-	"time"
-	"url_shortener/models"
 )
 
 var db *sql.DB
@@ -42,7 +44,7 @@ func CreateUserTable() {
 	id BIGINT PRIMARY KEY ,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
-    created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 	)
 	`
 	data, err := db.Exec(query)
@@ -66,7 +68,7 @@ func CreateUrlTable() {
 	original_url TEXT NOT NULL,
 	shortcode VARCHAR(7) UNIQUE NOT NULL,
 	user_id BIGINT references users(id),
-	created_at TIMESTAMPZ DEFAULT CURRENT_TIMESTAMP,
+	created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 	)
 	`
 	data, err := db.Exec(query)
@@ -108,23 +110,19 @@ func CreateAnalyticsTable() {
 	}
 }
 
-func FindUrlFromShortCode(shortCode string) (string, error) {
-	query := `SELECT original_url FROM urls WHERE shortcode = $1`
+func FindUrlIdFromShortCode(shortCode string) (int64, error) {
+	query := `SELECT id FROM urls WHERE shortcode = $1`
 	stmt, err := db.Prepare(query)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	defer stmt.Close()
-	var originalURL string
-	er := stmt.QueryRow(shortCode).Scan(&originalURL)
+	var urlId int64
+	er := stmt.QueryRow(shortCode).Scan(&urlId)
 	if er != nil {
-		fmt.Printf("Error querying URL with given short code %v\n", er)
-		if er == sql.ErrNoRows {
-			return "", fmt.Errorf("no URL found for the given short code: %v", shortCode)
-		}
-		return "", err
+		return 0, err
 	}
-	return originalURL, nil
+	return urlId, nil
 }
 
 func InsertUser(user models.User) error {
@@ -208,13 +206,22 @@ func InsertUrl(url models.URL) error {
 }
 
 func InsertAnalyticsData(clicksData models.ClickAnalytics) error {
-	query := `INSERT INTO analytics (id,url_id,ip_hash,country, city,os,browser,device,referrer,timestamp) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10)`
+	query := `INSERT INTO analytics (id,url_id,ip_hash,country,city,os,browser,device,referrer,timestamp) VALUES ($1, $2, $3, $4, $5,$6,$7,$8,$9,$10)`
+	urlId, err := FindUrlIdFromShortCode(clicksData.ShortCode)
+	if urlId == 0 || err != nil {
+		log.Printf("Error finding URL ID for shortcode %s: %v", clicksData.ShortCode, err)
+		return fmt.Errorf("error finding URL ID for shortcode %s: %w", clicksData.ShortCode, err)
+	}
 	stmt, err := db.Prepare(query)
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(clicksData.ID.Int64(), clicksData.ShortCode, clicksData.Ip, clicksData.Country, clicksData.City, clicksData.Os, clicksData.Browser, clicksData.Device, clicksData.Referer, clicksData.Timestamp)
+	id, err := strconv.ParseInt(clicksData.ID, 10, 64)
+	if err != nil {
+		return fmt.Errorf("failed to parse clicksData.ID to int64: %w", err)
+	}
+	_, err = stmt.Exec(id, urlId, clicksData.Ip, clicksData.Country, clicksData.City, clicksData.Os, clicksData.Browser, clicksData.Device, clicksData.Referer, clicksData.Timestamp)
 	if err != nil {
 		log.Fatalf("Error inserting data in analytics table %v", err)
 		return err

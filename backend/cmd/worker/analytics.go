@@ -4,17 +4,14 @@ import (
 	"context"
 	"log"
 	"sync"
-	"time"
 	"url_shortener/internals/db"
 	"url_shortener/models"
 
-	"github.com/bwmarrin/snowflake"
 	"github.com/redis/go-redis/v9"
 )
 
-func processClickQueue() {
+func ProcessClickQueue(ctx context.Context) {
 	var rdb = db.GetRedisClient()
-	ctx := context.Background()
 	var wg sync.WaitGroup
 	workerIDs := []string{"click_worker_1", "click_worker_2"}
 	for _, workerID := range workerIDs {
@@ -33,16 +30,16 @@ func processClickQueue() {
 					for _, message := range stream.Messages {
 						values := message.Values
 						analytics := models.ClickAnalytics{
-							ID:        values["id"].(snowflake.ID),
-							Timestamp: values["timestamp"].(time.Time),
-							Ip:        values["ip"].(string),
-							ShortCode: values["shortCode"].(string),
-							Referer:   values["referer"].(string),
-							Country:   values["country"].(string),
-							City:      values["city"].(string),
-							Os:        values["os"].(string),
-							Browser:   values["browser"].(string),
-							Device:    values["device"].(string),
+							ID:        values["ID"].(string),
+							Timestamp: values["Timestamp"].(string),
+							Ip:        values["Ip"].(string),
+							ShortCode: values["ShortCode"].(string),
+							Referer:   values["Referer"].(string),
+							Country:   values["Country"].(string),
+							City:      values["City"].(string),
+							Os:        values["Os"].(string),
+							Browser:   values["Browser"].(string),
+							Device:    values["Device"].(string),
 						}
 						err := db.InsertAnalyticsData(analytics)
 						if err != nil {
@@ -58,11 +55,4 @@ func processClickQueue() {
 	}
 	wg.Wait()
 	log.Println("Click queue processing stopped")
-}
-
-func main() {
-	if err := db.InitRedis(); err != nil {
-      log.Fatalf("Failed to initialize Redis: %v", err)
-    }
-	processClickQueue()
 }

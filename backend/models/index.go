@@ -1,10 +1,5 @@
 package models
 
-import (
-	"github.com/bwmarrin/snowflake"
-	"time"
-)
-
 type User struct {
 	ID        int64
 	Username  string
@@ -21,8 +16,8 @@ type URL struct {
 }
 
 type ClickAnalytics struct {
-	ID        snowflake.ID `json:"id"`
-	Timestamp time.Time    `json:"timestamp"`
+	ID        string `json:"id"`
+	Timestamp string    `json:"timestamp"`
 	Ip        string       `json:"ip"`
 	ShortCode string       `json:"shortCode"`
 	Referer   string       `json:"referer"`

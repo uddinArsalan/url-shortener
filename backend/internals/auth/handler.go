@@ -134,7 +134,6 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to find user: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	log.Printf("User retrieved: %+v", user)
 	jwtSecretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
 	if len(jwtSecretKey) == 0 {
 		http.Error(w, "JWT secret key not set", http.StatusInternalServerError)

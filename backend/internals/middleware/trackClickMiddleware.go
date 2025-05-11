@@ -16,8 +16,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-var rdb = db.GetRedisClient()
-
 func hashIp(ip string) string {
 	h := sha256.New()
 	h.Write([]byte(ip))
@@ -28,7 +26,8 @@ func hashIp(ip string) string {
 func TrackClickMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		db, err := geoip2.Open("GeoIP2-City.mmdb")
+		var rdb = db.GetRedisClient()
+		db, err := geoip2.Open("data/GeoLite2-City.mmdb")
 		if err != nil {
 			fmt.Printf("Error initiating GeoIP2 database: %v", err)
 			next.ServeHTTP(w, r)
@@ -48,8 +47,16 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		country := record.Country.Names["en"]
-		city := record.City.Names["en"]
+
+		country := "Unknown"
+		if name, ok := record.Country.Names["en"]; ok {
+			country = name
+		}
+
+		city := "Unknown"
+		if name, ok := record.City.Names["en"]; ok {
+			city = name
+		}
 		referer := r.Referer()
 		shortCode := vars["shortCode"]
 		device := "desktop"
@@ -70,8 +77,8 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		}
 		id := node.Generate()
 		clicksData := models.ClickAnalytics{
-			ID:        id,
-			Timestamp: time.Now(),
+			ID:        id.String(),
+			// Timestamp: time.Now().String(),
 			ShortCode: shortCode,
 			Referer:   referer,
 			Ip:        hashIp(host),
@@ -82,10 +89,21 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			Device:    device,
 		}
 		ctx := r.Context()
-		clickKey := fmt.Sprintf("click:%s:%s", shortCode, clicksData.ID)
-		hourStr := clicksData.Timestamp.Truncate(time.Hour).Format(time.RFC3339)
+		clickKey := fmt.Sprintf("click:%s:%v", shortCode, clicksData.ID)
+		hourStr := time.Now().Truncate(time.Hour).Format(time.RFC3339)
 		pipeline := rdb.Pipeline()
-		pipeline.HSet(ctx, clickKey, clicksData)
+		pipeline.HSet(ctx, clickKey,
+			"ID", clicksData.ID,
+			"Timestamp", time.Now().Format(time.RFC3339),
+			"ShortCode", clicksData.ShortCode,
+			"Referer", clicksData.Referer,
+			"Ip", clicksData.Ip,
+			"Country", clicksData.Country,
+			"Os", clicksData.Os,
+			"Browser", clicksData.Browser,
+			"City", clicksData.City,
+			"Device", clicksData.Device,
+		)
 		pipeline.Expire(ctx, clickKey, 24*time.Hour)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_hour", 1, hourStr)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_country", 1, country)
@@ -94,7 +112,18 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_referer", 1, referer)
 		pipeline.XAdd(ctx, &redis.XAddArgs{
 			Stream: "clicks:queue",
-			Values: clicksData,
+			Values: map[string]interface{}{
+				"ID":        clicksData.ID,
+				"Timestamp": time.Now().Format(time.RFC3339),
+				"ShortCode": clicksData.ShortCode,
+				"Referer":   clicksData.Referer,
+				"Ip":        clicksData.Ip,
+				"Country":   clicksData.Country,
+				"Os":        clicksData.Os,
+				"Browser":   clicksData.Browser,
+				"City":      clicksData.City,
+				"Device":    clicksData.Device,
+			},
 		})
 		_, err = pipeline.Exec(ctx)
 		if err != nil {

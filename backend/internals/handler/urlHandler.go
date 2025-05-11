@@ -3,16 +3,14 @@ package handler
 import (
 	"context"
 	"fmt"
+	"github.com/gorilla/mux"
+	"github.com/redis/go-redis/v9"
 	"math/rand"
 	"net/http"
 	"time"
 	"url_shortener/internals/config"
 	"url_shortener/internals/db"
 	"url_shortener/models"
-
-	// "config"
-	"github.com/gorilla/mux"
-	"github.com/redis/go-redis/v9"
 )
 
 func generateShortCode() string {
@@ -29,7 +27,6 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	userUrl := r.URL.Query().Get("url")
 	if userUrl == "" {
 		http.Error(w, "URL required", http.StatusBadRequest)
-		fmt.Println("No url provided to shorten")
 		return
 	}
 	userID, er := config.GetUserIDFromContext(r.Context())
@@ -51,11 +48,9 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := db.InsertUrl(url); err != nil {
 		http.Error(w, "Failed to save URL to database", http.StatusInternalServerError)
-		fmt.Printf("Error inserting URL into database: %v\n", err)
 		return
 	}
-	fmt.Printf("\nUrl shortened from %s to %s", userUrl, shortCode)
-	w.Write(fmt.Appendf(nil, "http://localhost/url/%s", shortCode))
+	w.Write(fmt.Appendf(nil, "http://localhost:4000/api/v1/url/%s", shortCode))
 }
 
 func RedirectURL(w http.ResponseWriter, r *http.Request) {

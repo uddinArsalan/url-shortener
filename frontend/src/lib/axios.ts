@@ -13,7 +13,7 @@ axiosInstance.interceptors.response.use(
   },
   async function (error) {
     console.log("Error in Axios Interceptor: ", error);
-    if (error.response.status === 401) {
+    if (error.response && error.response.status === 401) {
       userStore.set({
         user: null,
         isLoggedIn: false,

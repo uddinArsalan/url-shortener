@@ -9,6 +9,7 @@ import (
 
 	"net/http"
 
+	"url_shortener/cmd/worker"
 	"url_shortener/internals/auth"
 	"url_shortener/internals/config"
 	"url_shortener/internals/db"
@@ -22,12 +23,14 @@ func Start() {
 		log.Fatalf("Failed to initialize Redis: %v", err)
 	}
 	cfg := config.LoadKeycloakConfig()
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	kcAuth, err := auth.InitKeycloak(ctx, cfg)
 	if err != nil {
 		panic(err)
 	}
+	go worker.ProcessClickQueue(ctx)
 
 	r := mux.NewRouter()
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
@@ -36,11 +39,13 @@ func Start() {
 	public.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
 	public.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
 	protected := apiRouter.NewRoute().Subrouter()
-	protected.Use(middleware.PerClientRateLimiter)
+	public.Use(middleware.PerClientRateLimiter)
 	protected.Use(middleware.AuthMiddleware)
 	protected.HandleFunc("/shorten", handler.ShortenURL).Methods("POST")
 	protected.HandleFunc("/auth/logout", auth.HandleLogout).Methods("GET")
-	protected.HandleFunc("/url/{shortCode}", handler.RedirectURL).Methods("GET")
+	public.HandleFunc("/url/{shortCode}", func(w http.ResponseWriter, r *http.Request) {
+		middleware.TrackClickMiddleware(http.HandlerFunc(handler.RedirectURL)).ServeHTTP(w, r)
+	}).Methods("GET")
 	protected.HandleFunc("/me", handler.MeHandler).Methods("GET")
 	handlerWithCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},

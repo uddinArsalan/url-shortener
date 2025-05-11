@@ -3,9 +3,11 @@ package db
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/redis/go-redis/v9"
-	"os"
 )
 
 var rdb *redis.Client
@@ -23,6 +25,10 @@ func InitRedis() error {
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil {
 		return fmt.Errorf("failed to connect to Redis: %w", err)
+	}
+	err = rdb.XGroupCreateMkStream(ctx,"clicks:queue","click_worker","0").Err()
+	if err != nil {
+		log.Printf("Error creating Redis stream group: %v", err)
 	}
 
 	fmt.Println("Connected to Redis successfully")
