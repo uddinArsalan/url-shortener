@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 	"url_shortener/models"
-
 	"github.com/bwmarrin/snowflake"
 	_ "github.com/joho/godotenv/autoload"
 	_ "github.com/lib/pq"
@@ -110,6 +109,55 @@ func CreateAnalyticsTable() {
 	}
 }
 
+func FindUrlsFromUserId(userId string,limit int,cursor string) (models.URLResponse, error) {
+	query := `SELECT id, original_url, shortcode, created_at
+        FROM urls
+        WHERE user_id = $1`
+	var args []any
+    args = append(args, userId)
+	if cursor != "" {
+		query += ` AND created_at < $2`
+		args = append(args, cursor)
+	}	
+	query += ` ORDER BY created_at DESC LIMIT $` + strconv.Itoa(len(args)+1)
+	args = append(args, limit+1)
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return models.URLResponse{}, err
+	}
+	var urls []models.URL
+	defer stmt.Close()
+	rows, er := stmt.Query(args...)
+	if er != nil {
+		log.Printf("Error executing query: %v", er)
+		return models.URLResponse{}, er
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var url models.URL
+		err = rows.Scan(&url.ID, &url.OriginalURL, &url.ShortCode, &url.CreatedAt)
+		if err != nil {
+			return models.URLResponse{}, err
+		}
+		urls = append(urls, url)
+	}
+	var nextCursor string
+	var hasMore bool
+	if len(urls) > limit {
+		hasMore = true
+		urls = urls[:limit]
+	}
+	nextCursor = urls[len(urls)-1].CreatedAt.Format(time.RFC3339)
+
+	return models.URLResponse{
+		Urls : urls,
+		Pagination : models.Pagination{
+			NextCursor: nextCursor,
+			HasMore: hasMore,
+		},
+	}, nil
+}
+
 func FindUrlIdFromShortCode(shortCode string) (int64, error) {
 	query := `SELECT id FROM urls WHERE shortcode = $1`
 	stmt, err := db.Prepare(query)
@@ -196,7 +244,7 @@ func InsertUrl(url models.URL) error {
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(id.Int64(), url.OriginalUrl, url.ShortCode, url.UserId, time.Now())
+	_, err = stmt.Exec(id.Int64(), url.OriginalURL, url.ShortCode, url.UserID, time.Now())
 	if err != nil {
 		log.Fatalf("Error inserting data in urls table %v", err)
 		return err

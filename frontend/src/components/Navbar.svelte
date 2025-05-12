@@ -74,7 +74,7 @@
               aria-label="View profile"
             >
               <User size={24} />
-              <div>{$userStore.user?.Username}</div>
+              <div>{$userStore.user.username}</div>
             </a>
           </div>
         {:else}
@@ -128,14 +128,14 @@
             Dashboard
           </a>
           <a
-            href="/analytics"
+            href="/dashboard/analytics"
             class="text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium flex items-center"
           >
             <BarChart3 size={18} class="mr-2" />
             Analytics
           </a>
           <a
-            href="/profile"
+            href="/dashboard/profile"
             class="text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-3 py-2 rounded-md text-base font-medium flex items-center"
           >
             <User size={18} class="mr-2" />

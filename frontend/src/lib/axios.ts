@@ -15,7 +15,12 @@ axiosInstance.interceptors.response.use(
     console.log("Error in Axios Interceptor: ", error);
     if (error.response && error.response.status === 401) {
       userStore.set({
-        user: null,
+        user: {
+          id: 0,
+          username: "",
+          email: "",
+          created_at: "",
+        },
         isLoggedIn: false,
       });
       window.location.href = `${API_BASE_URL}/auth/login`;

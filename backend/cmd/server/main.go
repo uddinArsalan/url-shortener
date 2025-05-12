@@ -47,10 +47,10 @@ func Start() {
 		middleware.TrackClickMiddleware(http.HandlerFunc(handler.RedirectURL)).ServeHTTP(w, r)
 	}).Methods("GET")
 	protected.HandleFunc("/me", handler.MeHandler).Methods("GET")
+	protected.HandleFunc("/url", handler.GetUserUrls).Methods("GET")
 	handlerWithCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowCredentials: true,
 	}).Handler(r)
-
 	http.ListenAndServe(":4000", handlerWithCors)
 }

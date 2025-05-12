@@ -2,15 +2,18 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/redis/go-redis/v9"
 	"math/rand"
 	"net/http"
+	"strconv"
 	"time"
 	"url_shortener/internals/config"
 	"url_shortener/internals/db"
 	"url_shortener/models"
+
+	"github.com/gorilla/mux"
+	"github.com/redis/go-redis/v9"
 )
 
 func generateShortCode() string {
@@ -42,9 +45,9 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url := models.URL{
-		OriginalUrl: userUrl,
+		OriginalURL: userUrl,
 		ShortCode:   shortCode,
-		UserId:      userID,
+		UserID:      userID,
 	}
 	if err := db.InsertUrl(url); err != nil {
 		http.Error(w, "Failed to save URL to database", http.StatusInternalServerError)
@@ -70,4 +73,34 @@ func RedirectURL(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.Redirect(w, r, url, http.StatusSeeOther)
+}
+
+
+func GetUserUrls(w http.ResponseWriter, r *http.Request) {
+	userId , err := config.GetUserIDFromContext(r.Context())
+	if err != nil {
+		http.Error(w, err.Message, err.Status)
+		return
+	}
+	queryParams := r.URL.Query()
+    cursor := queryParams.Get("cursor")
+    limit := queryParams.Get("limit")
+	
+	if limit == "" {
+		limit = "3"
+	}
+	limitInt, convErr := strconv.Atoi(limit)
+	if convErr != nil {	
+		http.Error(w, "Invalid limit", http.StatusBadRequest)
+		return
+	}
+	urls, dbErr := db.FindUrlsFromUserId(strconv.FormatInt(userId, 10),limitInt,cursor)
+	if dbErr != nil {
+		http.Error(w, dbErr.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(urls)
+
 }

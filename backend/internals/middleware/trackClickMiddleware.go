@@ -69,6 +69,7 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		if ua.Bot() {
 			device = "bot"
 		}
+		ctx := r.Context()
 		node, err := snowflake.NewNode(1)
 		if err != nil {
 			fmt.Printf("failed to create snowflake node: %v", err)
@@ -78,7 +79,6 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		id := node.Generate()
 		clicksData := models.ClickAnalytics{
 			ID:        id.String(),
-			// Timestamp: time.Now().String(),
 			ShortCode: shortCode,
 			Referer:   referer,
 			Ip:        hashIp(host),
@@ -88,23 +88,8 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			City:      city,
 			Device:    device,
 		}
-		ctx := r.Context()
-		clickKey := fmt.Sprintf("click:%s:%v", shortCode, clicksData.ID)
-		hourStr := time.Now().Truncate(time.Hour).Format(time.RFC3339)
 		pipeline := rdb.Pipeline()
-		pipeline.HSet(ctx, clickKey,
-			"ID", clicksData.ID,
-			"Timestamp", time.Now().Format(time.RFC3339),
-			"ShortCode", clicksData.ShortCode,
-			"Referer", clicksData.Referer,
-			"Ip", clicksData.Ip,
-			"Country", clicksData.Country,
-			"Os", clicksData.Os,
-			"Browser", clicksData.Browser,
-			"City", clicksData.City,
-			"Device", clicksData.Device,
-		)
-		pipeline.Expire(ctx, clickKey, 24*time.Hour)
+		hourStr := time.Now().Truncate(time.Hour).Format(time.RFC3339)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_hour", 1, hourStr)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_country", 1, country)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_city", 1, city)
@@ -132,7 +117,5 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		next.ServeHTTP(w, r)
-		// fmt.Printf("Click data: %+v\n", clicksData)
-		// fmt.Printf("Click data stored in Redis: %+v\n", clickKey)
 	})
 }
