@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"sync"
+	"time"
 	"url_shortener/internals/db"
 	"url_shortener/models"
 
@@ -30,11 +31,11 @@ func ProcessClickQueue(ctx context.Context) {
 					for _, message := range stream.Messages {
 						values := message.Values
 						analytics := models.ClickAnalytics{
-							ID:        values["ID"].(string),
-							Timestamp: values["Timestamp"].(string),
+							ID:        values["ID"].(int64),
+							Timestamp: values["Timestamp"].(time.Time),
 							Ip:        values["Ip"].(string),
 							ShortCode: values["ShortCode"].(string),
-							Referer:   values["Referer"].(string),
+							Referrer:   values["Referrer"].(string),
 							Country:   values["Country"].(string),
 							City:      values["City"].(string),
 							Os:        values["Os"].(string),

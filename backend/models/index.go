@@ -12,7 +12,7 @@ type User struct {
 }
 
 type URL struct {
-	ID          int64     `json:"id" db:"id"`
+	ID          string     `json:"id" db:"id"`
 	OriginalURL string    `json:"original_url" db:"original_url"`
 	ShortCode   string    `json:"shortcode" db:"shortcode"`
 	UserID      int64     `json:"user_id" db:"user_id"`
@@ -30,14 +30,20 @@ type URLResponse struct {
 }
 
 type ClickAnalytics struct {
-	ID        string `json:"id"`
-	Timestamp string `json:"timestamp"`
-	Ip        string `json:"ip"`
-	ShortCode string `json:"shortCode"`
-	Referer   string `json:"referer"`
-	Country   string `json:"country"`
-	City      string `json:"city"`
-	Os        string `json:"os"`
-	Browser   string `json:"browser"`
-	Device    string `json:"device"`
+	ID        int64     `json:"id"`
+	Timestamp time.Time `json:"timestamp"`
+	Ip        string    `json:"ip_hash"`
+	ShortCode string    `json:"shortCode"`
+	Referrer   string    `json:"referrer"`
+	Country   string    `json:"country"`
+	City      string    `json:"city"`
+	Os        string    `json:"os"`
+	Browser   string    `json:"browser"`
+	Device    string    `json:"device"`
+}
+
+type UserAnalytics struct {
+	ClickAnalytics []ClickAnalytics `json:"click_analytics"`
+	TotalClicks int64 `json:"total_clicks"`
+	UniqueClicks int64 `json:"unique_clicks"`
 }

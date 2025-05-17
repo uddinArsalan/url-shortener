@@ -6,7 +6,7 @@ export interface UserType {
 }
 
 export interface UrlType{
-  id : number;
+  id : string;
   shortcode : string
   original_url : string;
   created_at : string;
@@ -25,4 +25,23 @@ export interface UrlResponseType{
 export interface UserStoreType {
   user: UserType;
   isLoggedIn: boolean;
+}
+
+type DeviceType = 'desktop' | 'mobile' | 'bot';
+
+export interface ClickAnalyticsType {
+  id: number;
+  browser : string;
+  os: string;
+  country: string;
+  city: string;
+  device: DeviceType;
+  referrer: string;
+  timestamp: string;
+}
+
+export interface ClickAnalyticsResponseType {
+  click_analytics: ClickAnalyticsType[];
+  total_clicks: number;
+  unique_clicks : number;
 }

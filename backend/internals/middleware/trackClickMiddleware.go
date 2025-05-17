@@ -57,7 +57,7 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		if name, ok := record.City.Names["en"]; ok {
 			city = name
 		}
-		referer := r.Referer()
+		referrer := r.Referer()
 		shortCode := vars["shortCode"]
 		device := "desktop"
 		ua := useragent.New(r.UserAgent())
@@ -78,9 +78,9 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		}
 		id := node.Generate()
 		clicksData := models.ClickAnalytics{
-			ID:        id.String(),
+			ID:        id.Int64(),
 			ShortCode: shortCode,
-			Referer:   referer,
+			Referrer:   referrer,
 			Ip:        hashIp(host),
 			Country:   country,
 			Os:        os,
@@ -94,14 +94,14 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_country", 1, country)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_city", 1, city)
 		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_device", 1, device)
-		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_referer", 1, referer)
+		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_referrer", 1, referrer)
 		pipeline.XAdd(ctx, &redis.XAddArgs{
 			Stream: "clicks:queue",
 			Values: map[string]interface{}{
 				"ID":        clicksData.ID,
 				"Timestamp": time.Now().Format(time.RFC3339),
 				"ShortCode": clicksData.ShortCode,
-				"Referer":   clicksData.Referer,
+				"Referrer":   clicksData.Referrer,
 				"Ip":        clicksData.Ip,
 				"Country":   clicksData.Country,
 				"Os":        clicksData.Os,

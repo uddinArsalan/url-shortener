@@ -3,14 +3,14 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"github.com/bwmarrin/snowflake"
+	_ "github.com/joho/godotenv/autoload"
+	_ "github.com/lib/pq"
 	"log"
 	"os"
 	"strconv"
 	"time"
 	"url_shortener/models"
-	"github.com/bwmarrin/snowflake"
-	_ "github.com/joho/godotenv/autoload"
-	_ "github.com/lib/pq"
 )
 
 var db *sql.DB
@@ -109,16 +109,16 @@ func CreateAnalyticsTable() {
 	}
 }
 
-func FindUrlsFromUserId(userId string,limit int,cursor string) (models.URLResponse, error) {
+func FindUrlsFromUserId(userId string, limit int, cursor string) (models.URLResponse, error) {
 	query := `SELECT id, original_url, shortcode, created_at
         FROM urls
         WHERE user_id = $1`
 	var args []any
-    args = append(args, userId)
+	args = append(args, userId)
 	if cursor != "" {
 		query += ` AND created_at < $2`
 		args = append(args, cursor)
-	}	
+	}
 	query += ` ORDER BY created_at DESC LIMIT $` + strconv.Itoa(len(args)+1)
 	args = append(args, limit+1)
 	stmt, err := db.Prepare(query)
@@ -150,10 +150,10 @@ func FindUrlsFromUserId(userId string,limit int,cursor string) (models.URLRespon
 	nextCursor = urls[len(urls)-1].CreatedAt.Format(time.RFC3339)
 
 	return models.URLResponse{
-		Urls : urls,
-		Pagination : models.Pagination{
+		Urls: urls,
+		Pagination: models.Pagination{
 			NextCursor: nextCursor,
-			HasMore: hasMore,
+			HasMore:    hasMore,
 		},
 	}, nil
 }
@@ -161,14 +161,15 @@ func FindUrlsFromUserId(userId string,limit int,cursor string) (models.URLRespon
 func FindUrlIdFromShortCode(shortCode string) (int64, error) {
 	query := `SELECT id FROM urls WHERE shortcode = $1`
 	stmt, err := db.Prepare(query)
-	if err != nil {
-		return 0, err
-	}
+	 if err != nil {
+        return 0, fmt.Errorf("error preparing statement: %w", err)
+    }
 	defer stmt.Close()
+
 	var urlId int64
 	er := stmt.QueryRow(shortCode).Scan(&urlId)
 	if er != nil {
-		return 0, err
+		return 0, er
 	}
 	return urlId, nil
 }
@@ -265,14 +266,48 @@ func InsertAnalyticsData(clicksData models.ClickAnalytics) error {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
 	defer stmt.Close()
-	id, err := strconv.ParseInt(clicksData.ID, 10, 64)
-	if err != nil {
-		return fmt.Errorf("failed to parse clicksData.ID to int64: %w", err)
-	}
-	_, err = stmt.Exec(id, urlId, clicksData.Ip, clicksData.Country, clicksData.City, clicksData.Os, clicksData.Browser, clicksData.Device, clicksData.Referer, clicksData.Timestamp)
+	// id, err := strconv.ParseInt(clicksData.ID, 10, 64)
+	// if err != nil {
+	// 	return fmt.Errorf("failed to parse clicksData.ID to int64: %w", err)
+	// }
+	_, err = stmt.Exec(clicksData.ID, urlId, clicksData.Ip, clicksData.Country, clicksData.City, clicksData.Os, clicksData.Browser, clicksData.Device, clicksData.Referrer, clicksData.Timestamp)
 	if err != nil {
 		log.Fatalf("Error inserting data in analytics table %v", err)
 		return err
 	}
 	return nil
+}
+
+func FindUserAnaltics(urlId int64) (models.UserAnalytics, error) {
+	query := `SELECT id,ip_hash,referrer,timestamp,country,city,os,browser,device FROM analytics
+	WHERE url_id = $1
+	ORDER BY timestamp DESC`
+	stmt, err := db.Prepare(query)
+	if err != nil {
+		return models.UserAnalytics{}, fmt.Errorf("error preparing query: %w", err)
+	}
+	defer stmt.Close()
+	rows, err := stmt.Query(urlId)
+	if err != nil {
+		return models.UserAnalytics{}, fmt.Errorf("error getting analytics: %w", err)
+	}
+	defer rows.Close()
+	var userAnalytics models.UserAnalytics
+	uniqueIPs := make(map[string]bool)
+	userAnalytics.ClickAnalytics = make([]models.ClickAnalytics, 0)
+	for rows.Next() {
+		var clickAnalytics models.ClickAnalytics
+		err = rows.Scan(&clickAnalytics.ID,&clickAnalytics.Ip, &clickAnalytics.Referrer, &clickAnalytics.Timestamp, &clickAnalytics.Country, &clickAnalytics.City, &clickAnalytics.Os, &clickAnalytics.Browser, &clickAnalytics.Device)
+
+		if err != nil {
+			return models.UserAnalytics{}, fmt.Errorf("error scanning row: %w", err)
+		}
+		uniqueIPs[clickAnalytics.Ip] = true
+		userAnalytics.ClickAnalytics = append(userAnalytics.ClickAnalytics, clickAnalytics)
+	}
+	userAnalytics.TotalClicks = int64(len(userAnalytics.ClickAnalytics))
+	userAnalytics.UniqueClicks = int64(len(uniqueIPs))
+
+	fmt.Println("User Analytics ", userAnalytics)
+	return userAnalytics, nil
 }

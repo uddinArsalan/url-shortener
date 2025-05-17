@@ -48,6 +48,7 @@ func Start() {
 	}).Methods("GET")
 	protected.HandleFunc("/me", handler.MeHandler).Methods("GET")
 	protected.HandleFunc("/url", handler.GetUserUrls).Methods("GET")
+	protected.HandleFunc("/analytics", handler.AnalyticsOfURL).Methods("GET")
 	handlerWithCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowCredentials: true,
