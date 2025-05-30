@@ -9,4 +9,5 @@ export const userStore = writable<UserStoreType>({
     created_at: "",
   },
   isLoggedIn: false,
+  // isLoading: false,
 });

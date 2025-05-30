@@ -12,6 +12,5 @@ export async function fetchUserUrls(cursor: string) {
     } else {
       throw new Error(`Error Fetching User URLs: ${String(error)}`);
     }
-  }
-    
+  } 
 }

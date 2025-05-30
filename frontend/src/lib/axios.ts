@@ -12,7 +12,7 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async function (error) {
-    console.log("Error in Axios Interceptor: ", error);
+    // console.log("Error in Axios Interceptor: ", error);
     if (error.response && error.response.status === 401) {
       userStore.set({
         user: {
@@ -23,10 +23,12 @@ axiosInstance.interceptors.response.use(
         },
         isLoggedIn: false,
       });
-      window.location.href = `${API_BASE_URL}/auth/login`;
+      if (typeof window !== "undefined") {
+        window.location.href = `${API_BASE_URL}/auth/login`;
+      }
     }
     return Promise.reject(error);
   }
 );
 
-export default axiosInstance
+export default axiosInstance;

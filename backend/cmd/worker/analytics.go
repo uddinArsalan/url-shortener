@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 	"url_shortener/internals/db"
@@ -30,19 +31,32 @@ func ProcessClickQueue(ctx context.Context) {
 				for _, stream := range streams.Val() {
 					for _, message := range stream.Messages {
 						values := message.Values
+						idStr := values["ID"].(string)
+						id, err := strconv.ParseInt(idStr, 10, 64)
+						if err != nil {
+							log.Printf("Error parsing ID: %v", err)
+							continue
+						}
+
+						timestampStr := values["Timestamp"].(string)
+						timestamp, err := time.Parse(time.RFC3339, timestampStr)
+						if err != nil {
+							log.Printf("Error parsing timestamp: %v", err)
+							continue
+						}
 						analytics := models.ClickAnalytics{
-							ID:        values["ID"].(int64),
-							Timestamp: values["Timestamp"].(time.Time),
+							ID:        id,
+							Timestamp: timestamp,
 							Ip:        values["Ip"].(string),
 							ShortCode: values["ShortCode"].(string),
-							Referrer:   values["Referrer"].(string),
+							Referrer:  values["Referrer"].(string),
 							Country:   values["Country"].(string),
 							City:      values["City"].(string),
 							Os:        values["Os"].(string),
 							Browser:   values["Browser"].(string),
 							Device:    values["Device"].(string),
 						}
-						err := db.InsertAnalyticsData(analytics)
+						err = db.InsertAnalyticsData(analytics)
 						if err != nil {
 							log.Printf("Error inserting analytics data: %v, Message ID: %v", err, message)
 							continue

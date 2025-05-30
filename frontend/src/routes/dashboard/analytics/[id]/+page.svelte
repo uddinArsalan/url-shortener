@@ -1,9 +1,5 @@
 <script lang="ts">
-  import type { ClickAnalyticsResponseType } from "../../../../types";
   import {
-    Monitor,
-    Smartphone,
-    Bot,
     Chrome,
     MapPin,
     Clock,
@@ -12,21 +8,14 @@
     Users,
   } from "@lucide/svelte";
   import type { AnalyticsType } from "./+page";
-
-  export let data : AnalyticsType;
-
-  const getDeviceIcon = (device: string) => {
-    switch (device) {
-      case "desktop":
-        return Monitor;
-      case "mobile":
-        return Smartphone;
-      case "bot":
-        return Bot;
-      default:
-        return Monitor;
-    }
-  };
+  import { getDeviceIcon } from "$lib/utils";
+  import CountryClicks from "../../../../components/CountryClicks.svelte";
+  import HourlyClicks from "../../../../components/HourlyClicks.svelte";
+  import BrowserWiseClicks from "../../../../components/BrowserWiseClicks.svelte";
+  import DeviceWiseClicks from "../../../../components/DeviceWiseClicks.svelte";
+  import CityWiseClicks from "../../../../components/CityWiseClicks.svelte";
+  import ReferrerClicks from "../../../../components/ReferrerClicks.svelte";
+  export let data: AnalyticsType;
 </script>
 
 <div class="min-h-screen bg-gray-50 p-6">
@@ -37,7 +26,9 @@
           <MousePointerClick class="w-8 h-8 text-blue-600" />
           <div>
             <p class="text-gray-600">Total Clicks</p>
-            <h3 class="text-2xl font-bold">{data.analyticsData.total_clicks}</h3>
+            <h3 class="text-2xl font-bold">
+              {data.analyticsData.total_clicks}
+            </h3>
           </div>
         </div>
       </div>
@@ -47,9 +38,38 @@
           <Users class="w-8 h-8 text-green-600" />
           <div>
             <p class="text-gray-600">Unique Clicks</p>
-            <h3 class="text-2xl font-bold">{data.analyticsData.unique_clicks}</h3>
+            <h3 class="text-2xl font-bold">
+              {data.analyticsData.unique_clicks}
+            </h3>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Clicks by Country</h2>
+        <CountryClicks data={data.countryData} />
+      </div>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Hourly Clicks</h2>
+        <HourlyClicks data={data.hourlyClicksData} />
+      </div>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Clicks by Browser</h2>
+        <BrowserWiseClicks data={data.browserAnalyticsData} />
+      </div>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Clicks by Device</h2>
+        <DeviceWiseClicks data={data.deviceAnalyticsData} />
+      </div>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Clicks by City</h2>
+        <CityWiseClicks data={data.cityAnalyticsData} />
+      </div>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold mb-4">Referrer Clicks</h2>
+        <ReferrerClicks data={data.referrerAnalyticsData} />
       </div>
     </div>
 
@@ -77,6 +97,10 @@
               >
               <th
                 class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >OS</th
+              >
+              <th
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
                 >Time</th
               >
             </tr>
@@ -90,7 +114,7 @@
                       this={getDeviceIcon(click.device)}
                       class="w-4 h-4"
                     />
-                    <span class="capitalize">{click.device}</span>
+                    <span class="capitalize">{click.device || "Desktop"}</span>
                   </div>
                 </td>
                 <td class="px-6 py-4">
@@ -111,6 +135,14 @@
                     <Link2 class="w-4 h-4" />
                     <span class="truncate max-w-xs"
                       >{click.referrer || "Direct"}</span
+                    >
+                  </div>
+                </td>
+                <td class="px-6 py-4">
+                  <div class="flex items-center gap-2">
+                    <Link2 class="w-4 h-4" />
+                    <span class="truncate max-w-xs"
+                      >{click.os}</span
                     >
                   </div>
                 </td>

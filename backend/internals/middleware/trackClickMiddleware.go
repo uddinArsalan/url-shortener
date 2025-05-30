@@ -27,13 +27,13 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		var rdb = db.GetRedisClient()
-		db, err := geoip2.Open("data/GeoLite2-City.mmdb")
+		geoDb, err := geoip2.Open("data/GeoLite2-City.mmdb")
 		if err != nil {
 			fmt.Printf("Error initiating GeoIP2 database: %v", err)
 			next.ServeHTTP(w, r)
 			return
 		}
-		defer db.Close()
+		defer geoDb.Close()
 		host, _, _ := net.SplitHostPort(r.RemoteAddr)
 		ip := net.ParseIP(host)
 		if ip == nil {
@@ -41,7 +41,7 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		record, err := db.City(ip)
+		record, err := geoDb.City(ip)
 		if err != nil {
 			fmt.Printf("Error getting GeoIP2 record: %v", err)
 			next.ServeHTTP(w, r)
@@ -59,6 +59,12 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		}
 		referrer := r.Referer()
 		shortCode := vars["shortCode"]
+		if shortCode == "" {
+			http.Error(w, "Short code is required", http.StatusBadRequest)
+			return
+		}
+		urlId, _ := db.FindUrlIdFromShortCode(shortCode)
+		urlIdStr := fmt.Sprintf("%d", urlId)
 		device := "desktop"
 		ua := useragent.New(r.UserAgent())
 		browser, _ := ua.Browser()
@@ -86,15 +92,15 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			Os:        os,
 			Browser:   browser,
 			City:      city,
-			Device:    device,
 		}
 		pipeline := rdb.Pipeline()
 		hourStr := time.Now().Truncate(time.Hour).Format(time.RFC3339)
-		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_hour", 1, hourStr)
-		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_country", 1, country)
-		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_city", 1, city)
-		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_device", 1, device)
-		pipeline.ZIncrBy(ctx, "clicks:"+shortCode+":by_referrer", 1, referrer)
+		pipeline.ZIncrBy(ctx, "clicks:"+urlIdStr+":by_hour", 1, hourStr)
+		pipeline.ZIncrBy(ctx, "clicks:"+urlIdStr+":by_country", 1, country)
+		pipeline.ZIncrBy(ctx, "clicks:"+urlIdStr+":by_city", 1, city)
+		pipeline.ZIncrBy(ctx, "clicks:"+urlIdStr+":by_device", 1, device)
+		pipeline.ZIncrBy(ctx, "clicks:"+urlIdStr+":by_browser", 1, browser)
+		pipeline.ZIncrBy(ctx, "clicks:"+urlIdStr+":by_referrer", 1, referrer)
 		pipeline.XAdd(ctx, &redis.XAddArgs{
 			Stream: "clicks:queue",
 			Values: map[string]interface{}{

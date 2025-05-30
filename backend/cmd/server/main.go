@@ -49,6 +49,12 @@ func Start() {
 	protected.HandleFunc("/me", handler.MeHandler).Methods("GET")
 	protected.HandleFunc("/url", handler.GetUserUrls).Methods("GET")
 	protected.HandleFunc("/analytics", handler.AnalyticsOfURL).Methods("GET")
+	protected.HandleFunc("/analytics/{urlId}/hourly", handler.GetHourlyClicks).Methods("GET")
+	protected.HandleFunc("/analytics/{urlId}/country", handler.GetCountryWiseClicks).Methods("GET")
+	protected.HandleFunc("/analytics/{urlId}/city", handler.GetCityWiseClicks).Methods("GET")
+	protected.HandleFunc("/analytics/{urlId}/device", handler.GetDeviceWiseClicks).Methods("GET")
+	protected.HandleFunc("/analytics/{urlId}/browser", handler.GetBrowserWiseClicks).Methods("GET")
+	protected.HandleFunc("/analytics/{urlId}/referrer", handler.GetReferrerWiseClicks).Methods("GET")
 	handlerWithCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowCredentials: true,

@@ -278,7 +278,7 @@ func InsertAnalyticsData(clicksData models.ClickAnalytics) error {
 	return nil
 }
 
-func FindUserAnaltics(urlId int64) (models.UserAnalytics, error) {
+func FindUserAnaltics(urlId string) (models.UserAnalytics, error) {
 	query := `SELECT id,ip_hash,referrer,timestamp,country,city,os,browser,device FROM analytics
 	WHERE url_id = $1
 	ORDER BY timestamp DESC`
@@ -308,6 +308,6 @@ func FindUserAnaltics(urlId int64) (models.UserAnalytics, error) {
 	userAnalytics.TotalClicks = int64(len(userAnalytics.ClickAnalytics))
 	userAnalytics.UniqueClicks = int64(len(uniqueIPs))
 
-	fmt.Println("User Analytics ", userAnalytics)
+	// fmt.Println("User Analytics ", userAnalytics)
 	return userAnalytics, nil
 }

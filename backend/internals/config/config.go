@@ -2,9 +2,14 @@ package config
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"os"
+	// "fmt"
+	"strings"
+	"url_shortener/internals/db"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
 )
 
@@ -38,6 +43,28 @@ func GetUserIDFromContext(ctx context.Context) (int64, *HTTPError) {
 
 	return int64(sub), nil
 }
+
+func GetClicksByDimension(w http.ResponseWriter, r *http.Request, dimension string) {
+	vars := mux.Vars(r)
+	urlId := vars["urlId"]
+	if urlId == "" {
+		http.Error(w, "URL ID required", http.StatusBadRequest)
+		return
+	}
+	rdb := db.GetRedisClient()
+	key := "clicks:" + urlId + ":" + dimension
+	data, _ := rdb.ZRangeWithScores(r.Context(), key, 0, -1).Result()
+	result := []map[string]interface{}{}
+	label := strings.TrimPrefix(dimension, "by_")
+	for _, z := range data {
+		result = append(result, map[string]interface{}{
+			label: z.Member.(string),
+			"count": int(z.Score),
+		})
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
 
 
 func LoadKeycloakConfig() KeycloakConfig {

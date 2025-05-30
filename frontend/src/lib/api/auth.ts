@@ -5,12 +5,8 @@ export async function fetchUser() {
     const user = await axios.get(`/me`);
     return user.data;
   } catch (error) {
-    console.log("Error Fetching User ", error);
-    if (error instanceof Error) {
-      throw new Error(`Error Fetching User: ${error.message}`);
-    } else {
-      throw new Error(`Error Fetching User: ${String(error)}`);
-    }
+    // console.log("Error Fetching User ", error);
+    throw new Error(`Error Fetching User`);
   }
 }
 
