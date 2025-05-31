@@ -138,7 +138,11 @@ func FindUrlsFromUserId(userId string, limit int, cursor string) (models.URLResp
 		log.Printf("Error executing query: %v", er)
 		return models.URLResponse{}, er
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 	for rows.Next() {
 		var url models.URL
 		err = rows.Scan(&url.ID, &url.OriginalURL, &url.ShortCode, &url.CreatedAt)
