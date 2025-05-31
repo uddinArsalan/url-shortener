@@ -3,6 +3,7 @@ package middleware
 import (
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"time"
@@ -33,7 +34,11 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		defer geoDb.Close()
+		defer func() {
+			if err := geoDb.Close(); err != nil {
+				log.Printf("Failed to close geo database: %v", err)
+			}
+		}()
 		host, _, _ := net.SplitHostPort(r.RemoteAddr)
 		ip := net.ParseIP(host)
 		if ip == nil {
@@ -86,7 +91,7 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 		clicksData := models.ClickAnalytics{
 			ID:        id.Int64(),
 			ShortCode: shortCode,
-			Referrer:   referrer,
+			Referrer:  referrer,
 			Ip:        hashIp(host),
 			Country:   country,
 			Os:        os,
@@ -107,7 +112,7 @@ func TrackClickMiddleware(next http.Handler) http.Handler {
 				"ID":        clicksData.ID,
 				"Timestamp": time.Now().Format(time.RFC3339),
 				"ShortCode": clicksData.ShortCode,
-				"Referrer":   clicksData.Referrer,
+				"Referrer":  clicksData.Referrer,
 				"Ip":        clicksData.Ip,
 				"Country":   clicksData.Country,
 				"Os":        clicksData.Os,

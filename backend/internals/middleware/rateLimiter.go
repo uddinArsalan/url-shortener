@@ -55,7 +55,10 @@ func PerClientRateLimiter(next http.Handler) http.Handler {
 				Body:   "The API is at capacity, try again later.",
 			}
 			w.WriteHeader(http.StatusTooManyRequests)
-			json.NewEncoder(w).Encode(&message)
+			if err := json.NewEncoder(w).Encode(&message); err != nil {
+				http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+				return
+			}
 			return
 		}
 		mu.Unlock()

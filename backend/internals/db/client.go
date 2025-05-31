@@ -27,7 +27,9 @@ func InitDBClient() {
 	}
 
 	if err := db.Ping(); err != nil {
-		db.Close()
+		if err := db.Close(); err != nil {
+			log.Printf("Failed to close database: %v", err)
+		}
 		log.Fatalf("Database connection failed: %v", err)
 	}
 	fmt.Println("Database connected successfully!")
@@ -126,7 +128,11 @@ func FindUrlsFromUserId(userId string, limit int, cursor string) (models.URLResp
 		return models.URLResponse{}, err
 	}
 	var urls []models.URL
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 	rows, er := stmt.Query(args...)
 	if er != nil {
 		log.Printf("Error executing query: %v", er)
@@ -161,10 +167,14 @@ func FindUrlsFromUserId(userId string, limit int, cursor string) (models.URLResp
 func FindUrlIdFromShortCode(shortCode string) (int64, error) {
 	query := `SELECT id FROM urls WHERE shortcode = $1`
 	stmt, err := db.Prepare(query)
-	 if err != nil {
-        return 0, fmt.Errorf("error preparing statement: %w", err)
-    }
-	defer stmt.Close()
+	if err != nil {
+		return 0, fmt.Errorf("error preparing statement: %w", err)
+	}
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 
 	var urlId int64
 	er := stmt.QueryRow(shortCode).Scan(&urlId)
@@ -185,7 +195,11 @@ func InsertUser(user models.User) error {
 	if err != nil {
 		return fmt.Errorf("failed to prepare insert statement: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 
 	_, err = stmt.Exec(id.Int64(), user.Username, user.Email, time.Now())
 	if err != nil {
@@ -201,7 +215,11 @@ func FindUserByEmail(email string) (models.User, error) {
 	if err != nil {
 		return models.User{}, fmt.Errorf("error preparing query: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 	var user models.User
 
 	err = stmt.QueryRow(email).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
@@ -218,7 +236,11 @@ func FindUserByID(id int64) (models.User, error) {
 	if err != nil {
 		return models.User{}, fmt.Errorf("error preparing query: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 	var user models.User
 
 	err = stmt.QueryRow(id).Scan(&user.ID, &user.Username, &user.Email, &user.CreatedAt)
@@ -243,7 +265,11 @@ func InsertUrl(url models.URL) error {
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 
 	_, err = stmt.Exec(id.Int64(), url.OriginalURL, url.ShortCode, url.UserID, time.Now())
 	if err != nil {
@@ -265,11 +291,12 @@ func InsertAnalyticsData(clicksData models.ClickAnalytics) error {
 	if err != nil {
 		return fmt.Errorf("error preparing query: %w", err)
 	}
-	defer stmt.Close()
-	// id, err := strconv.ParseInt(clicksData.ID, 10, 64)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to parse clicksData.ID to int64: %w", err)
-	// }
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
+
 	_, err = stmt.Exec(clicksData.ID, urlId, clicksData.Ip, clicksData.Country, clicksData.City, clicksData.Os, clicksData.Browser, clicksData.Device, clicksData.Referrer, clicksData.Timestamp)
 	if err != nil {
 		log.Fatalf("Error inserting data in analytics table %v", err)
@@ -286,18 +313,26 @@ func FindUserAnaltics(urlId string) (models.UserAnalytics, error) {
 	if err != nil {
 		return models.UserAnalytics{}, fmt.Errorf("error preparing query: %w", err)
 	}
-	defer stmt.Close()
+	defer func() {
+		if err := stmt.Close(); err != nil {
+			log.Printf("Failed to close statement: %v", err)
+		}
+	}()
 	rows, err := stmt.Query(urlId)
 	if err != nil {
 		return models.UserAnalytics{}, fmt.Errorf("error getting analytics: %w", err)
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("Failed to close rows: %v", err)
+		}
+	}()
 	var userAnalytics models.UserAnalytics
 	uniqueIPs := make(map[string]bool)
 	userAnalytics.ClickAnalytics = make([]models.ClickAnalytics, 0)
 	for rows.Next() {
 		var clickAnalytics models.ClickAnalytics
-		err = rows.Scan(&clickAnalytics.ID,&clickAnalytics.Ip, &clickAnalytics.Referrer, &clickAnalytics.Timestamp, &clickAnalytics.Country, &clickAnalytics.City, &clickAnalytics.Os, &clickAnalytics.Browser, &clickAnalytics.Device)
+		err = rows.Scan(&clickAnalytics.ID, &clickAnalytics.Ip, &clickAnalytics.Referrer, &clickAnalytics.Timestamp, &clickAnalytics.Country, &clickAnalytics.City, &clickAnalytics.Os, &clickAnalytics.Browser, &clickAnalytics.Device)
 
 		if err != nil {
 			return models.UserAnalytics{}, fmt.Errorf("error scanning row: %w", err)
@@ -308,6 +343,5 @@ func FindUserAnaltics(urlId string) (models.UserAnalytics, error) {
 	userAnalytics.TotalClicks = int64(len(userAnalytics.ClickAnalytics))
 	userAnalytics.UniqueClicks = int64(len(uniqueIPs))
 
-	// fmt.Println("User Analytics ", userAnalytics)
 	return userAnalytics, nil
 }

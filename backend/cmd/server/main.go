@@ -59,5 +59,9 @@ func Start() {
 		AllowedOrigins:   []string{"http://localhost:5173"},
 		AllowCredentials: true,
 	}).Handler(r)
-	http.ListenAndServe(":4000", handlerWithCors)
+
+	if err := http.ListenAndServe(":4000", handlerWithCors); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
+
 }

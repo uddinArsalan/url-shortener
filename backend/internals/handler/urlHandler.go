@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -53,7 +54,12 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save URL to database", http.StatusInternalServerError)
 		return
 	}
-	w.Write(fmt.Appendf(nil, "http://localhost:4000/api/v1/url/%s", shortCode))
+	response := fmt.Sprintf("http://localhost:4000/api/v1/url/%s", shortCode)
+	if _, err := w.Write([]byte(response)); err != nil {
+		log.Printf("Failed to write response: %v", err)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func RedirectURL(w http.ResponseWriter, r *http.Request) {
@@ -75,26 +81,25 @@ func RedirectURL(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }
 
-
 func GetUserUrls(w http.ResponseWriter, r *http.Request) {
-	userId , err := config.GetUserIDFromContext(r.Context())
+	userId, err := config.GetUserIDFromContext(r.Context())
 	if err != nil {
 		http.Error(w, err.Message, err.Status)
 		return
 	}
 	queryParams := r.URL.Query()
-    cursor := queryParams.Get("cursor")
-    limit := queryParams.Get("limit")
-	
+	cursor := queryParams.Get("cursor")
+	limit := queryParams.Get("limit")
+
 	if limit == "" {
 		limit = "3"
 	}
 	limitInt, convErr := strconv.Atoi(limit)
-	if convErr != nil {	
+	if convErr != nil {
 		http.Error(w, "Invalid limit", http.StatusBadRequest)
 		return
 	}
-	urls, dbErr := db.FindUrlsFromUserId(strconv.FormatInt(userId, 10),limitInt,cursor)
+	urls, dbErr := db.FindUrlsFromUserId(strconv.FormatInt(userId, 10), limitInt, cursor)
 	if dbErr != nil {
 		http.Error(w, dbErr.Error(), http.StatusInternalServerError)
 		return
@@ -104,4 +109,3 @@ func GetUserUrls(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(urls)
 
 }
-

@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"os"
 	// "fmt"
-	"strings"
-	"url_shortener/internals/db"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/mux"
 	_ "github.com/joho/godotenv/autoload"
+	"strings"
+	"url_shortener/internals/db"
 )
 
 type KeycloakConfig struct {
@@ -25,8 +25,8 @@ type contextKey string
 
 const UserContextKey contextKey = "user"
 
-type HTTPError struct  {
-	Status int
+type HTTPError struct {
+	Status  int
 	Message string
 }
 
@@ -58,14 +58,16 @@ func GetClicksByDimension(w http.ResponseWriter, r *http.Request, dimension stri
 	label := strings.TrimPrefix(dimension, "by_")
 	for _, z := range data {
 		result = append(result, map[string]interface{}{
-			label: z.Member.(string),
+			label:   z.Member.(string),
 			"count": int(z.Score),
 		})
 	}
-	json.NewEncoder(w).Encode(result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+
 }
-
-
 
 func LoadKeycloakConfig() KeycloakConfig {
 	return KeycloakConfig{
