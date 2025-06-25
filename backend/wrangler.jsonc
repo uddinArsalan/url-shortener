@@ -1,0 +1,6 @@
+{
+  "name": "url-shortener",
+  "main": "main.go",
+  "compatibility_date": "2022-07-12",
+  "workers_dev": true
+}

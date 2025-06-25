@@ -55,8 +55,10 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
+	cookies := []string{"token", "state", "nonce"}
+	for _,cookie := range cookies{
+		http.SetCookie(w, &http.Cookie{
+		Name:     cookie,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
@@ -64,7 +66,8 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
 	})
-	http.Redirect(w, r, "/auth/login", http.StatusFound)
+	}
+	// http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
 func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
