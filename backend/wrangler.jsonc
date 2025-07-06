@@ -1,6 +1,9 @@
 {
-  "name": "url-shortener",
-  "main": "main.go",
+  "name": "linkly-worker",
+  "main": "./build/worker.mjs",
   "compatibility_date": "2022-07-12",
-  "workers_dev": true
+  "workers_dev": true,
+  "build": {
+    "command": "npm run build"
+  }
 }
