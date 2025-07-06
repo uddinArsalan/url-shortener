@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -56,16 +57,16 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	cookies := []string{"token", "state", "nonce"}
-	for _,cookie := range cookies{
+	for _, cookie := range cookies {
 		http.SetCookie(w, &http.Cookie{
-		Name:     cookie,
-		Value:    "",
-		Path:     "/",
-		MaxAge:   -1,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	})
+			Name:     cookie,
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+		})
 	}
 	// http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
@@ -121,8 +122,9 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	fmt.Println("Claims ", claims)
 	user, err := db.FindUserByEmail(claims.Email)
+	fmt.Println("User found :", user, "Error", err)
 	if err == sql.ErrNoRows {
 		user = models.User{
 			Username: claims.Name,

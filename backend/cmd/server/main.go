@@ -9,6 +9,7 @@ import (
 
 	"net/http"
 
+	"github.com/syumai/workers"
 	"url_shortener/cmd/worker"
 	"url_shortener/internals/auth"
 	"url_shortener/internals/config"
@@ -56,12 +57,14 @@ func Start() {
 	protected.HandleFunc("/analytics/{urlId}/browser", handler.GetBrowserWiseClicks).Methods("GET")
 	protected.HandleFunc("/analytics/{urlId}/referrer", handler.GetReferrerWiseClicks).Methods("GET")
 	handlerWithCors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{"http://localhost:5173", ""},
 		AllowCredentials: true,
 	}).Handler(r)
 
-	if err := http.ListenAndServe(":4000", handlerWithCors); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
-	}
+	workers.Serve(handlerWithCors)
+
+	// if err := http.ListenAndServe(":4000", handlerWithCors); err != nil {
+	// 	log.Fatalf("Failed to start server: %v", err)
+	// }
 
 }
