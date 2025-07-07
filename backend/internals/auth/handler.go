@@ -122,7 +122,6 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Println("Claims ", claims)
 	user, err := db.FindUserByEmail(claims.Email)
 	fmt.Println("User found :", user, "Error", err)
 	if err == sql.ErrNoRows {
