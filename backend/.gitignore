@@ -16,3 +16,7 @@
 
 # .gitignore
 GeoLite2-*.mmdb
+
+build
+node_modules
+.wrangler
