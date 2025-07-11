@@ -9,7 +9,7 @@ import (
 
 	"net/http"
 
-	"github.com/syumai/workers"
+	// "github.com/syumai/workers"
 	"url_shortener/cmd/worker"
 	"url_shortener/internals/auth"
 	"url_shortener/internals/config"
@@ -61,10 +61,10 @@ func Start() {
 		AllowCredentials: true,
 	}).Handler(r)
 
-	workers.Serve(handlerWithCors)
+	// workers.Serve(handlerWithCors)
 
-	// if err := http.ListenAndServe(":4000", handlerWithCors); err != nil {
-	// 	log.Fatalf("Failed to start server: %v", err)
-	// }
+	if err := http.ListenAndServe(":4000", handlerWithCors); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 
 }
