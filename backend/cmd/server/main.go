@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	// "github.com/syumai/workers"
-	"url_shortener/cmd/worker"
 	"url_shortener/internals/auth"
 	"url_shortener/internals/config"
 	"url_shortener/internals/db"
@@ -31,7 +30,6 @@ func Start() {
 	if err != nil {
 		panic(err)
 	}
-	go worker.ProcessClickQueue(ctx)
 
 	r := mux.NewRouter()
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
