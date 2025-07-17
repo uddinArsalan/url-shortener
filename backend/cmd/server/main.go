@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -61,7 +62,12 @@ func Start() {
 
 	// workers.Serve(handlerWithCors)
 
-	if err := http.ListenAndServe(":4000", handlerWithCors); err != nil {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "4000"
+	}
+	log.Printf("Listening on port %s...", port)
+	if err := http.ListenAndServe(":"+port, handlerWithCors); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 
