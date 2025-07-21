@@ -55,8 +55,9 @@ func Start() {
 	protected.HandleFunc("/analytics/{urlId}/device", handler.GetDeviceWiseClicks).Methods("GET")
 	protected.HandleFunc("/analytics/{urlId}/browser", handler.GetBrowserWiseClicks).Methods("GET")
 	protected.HandleFunc("/analytics/{urlId}/referrer", handler.GetReferrerWiseClicks).Methods("GET")
+
 	handlerWithCors := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", ""},
+		AllowedOrigins:   []string{"http://localhost:5173", "https://url-shortener-4ve.pages.dev"},
 		AllowCredentials: true,
 	}).Handler(r)
 
