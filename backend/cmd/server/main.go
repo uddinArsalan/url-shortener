@@ -56,7 +56,7 @@ func Start() {
 	protected.HandleFunc("/analytics/{urlId}/browser", handler.GetBrowserWiseClicks).Methods("GET")
 	protected.HandleFunc("/analytics/{urlId}/referrer", handler.GetReferrerWiseClicks).Methods("GET")
 
-	allowedOrigin := os.GetEnv("ALLOWED_ORIGIN")
+	allowedOrigin := os.Getenv("ALLOWED_ORIGIN")
 
 	handlerWithCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173", allowedOrigin},
