@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 	"url_shortener/internals/config"
@@ -54,7 +55,8 @@ func ShortenURL(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to save URL to database", http.StatusInternalServerError)
 		return
 	}
-	response := fmt.Sprintf("http://localhost:4000/api/v1/url/%s", shortCode)
+	apiUrl := os.Getenv("API_URL")
+	response := fmt.Sprintf("%s/url/%s", apiUrl,shortCode)
 	if _, err := w.Write([]byte(response)); err != nil {
 		log.Printf("Failed to write response: %v", err)
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)

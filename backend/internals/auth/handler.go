@@ -162,5 +162,6 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   int(24 * time.Hour.Seconds()),
 	})
-	http.Redirect(w, r, "http://localhost:5173", http.StatusFound)
+	redirectUrl := os.Getenv("REDIRECT_URL")
+	http.Redirect(w, r, redirectUrl, http.StatusFound)
 }
