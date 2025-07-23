@@ -33,8 +33,9 @@ func setCallbackCookie(w http.ResponseWriter, r *http.Request, name string, valu
 		Value:    value,
 		Path:     "/",
 		MaxAge:   int(time.Hour.Seconds()),
-		Secure:   r.TLS != nil,
+		Secure: true,
 		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, c)
 }
@@ -65,7 +66,7 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 			MaxAge:   -1,
 			HttpOnly: true,
 			Secure:   true,
-			SameSite: http.SameSiteLaxMode,
+			SameSite: http.SameSiteNoneMode,
 		})
 	}
 	// http.Redirect(w, r, "/auth/login", http.StatusFound)
@@ -158,8 +159,8 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   r.TLS != nil,
-		SameSite: http.SameSiteStrictMode,
+		Secure: true,
+		SameSite: http.SameSiteNoneMode,
 		MaxAge:   int(24 * time.Hour.Seconds()),
 	})
 	redirectUrl := os.Getenv("REDIRECT_URL")

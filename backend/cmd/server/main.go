@@ -61,6 +61,7 @@ func Start() {
 	handlerWithCors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:5173", allowedOrigin},
 		AllowCredentials: true,
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 	}).Handler(r)
 
 	// workers.Serve(handlerWithCors)
