@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import type { UserStoreType } from "../../types";
 
-export const userStore = writable<UserStoreType | null>({
+export const userStore = writable<UserStoreType>({
   user: {
     id: 0,
     username: "",
