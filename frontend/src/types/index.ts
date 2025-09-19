@@ -23,7 +23,7 @@ export interface UrlResponseType {
 }
 
 export interface UserStoreType {
-  user: UserType;
+  user: UserType | null;
   isLoggedIn: boolean;
   // isLoading : boolean
 }

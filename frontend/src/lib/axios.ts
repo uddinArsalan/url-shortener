@@ -15,12 +15,7 @@ axiosInstance.interceptors.response.use(
     // console.log("Error in Axios Interceptor: ", error);
     if (error.response && error.response.status === 401) {
       userStore.set({
-        user: {
-          id: 0,
-          username: "",
-          email: "",
-          created_at: "",
-        },
+        user: null,
         isLoggedIn: false,
       });
       if (typeof window !== "undefined") {

@@ -46,7 +46,9 @@
             aria-label="View profile"
           >
             <User size={20} class="mr-2" />
-            <span class="font-medium">{$userStore.user.username}</span>
+            <span class="font-medium"
+              >{$userStore?.user?.username ?? "Unknown"}</span
+            >
           </a>
         {:else}
           <button
@@ -93,17 +95,17 @@
         {#if $userStore.isLoggedIn}
           <a
             href="/dashboard"
-            class="block text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-md text-base font-medium flex items-center"
+            class="text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-md text-base font-medium flex items-center"
           >
             <BarChart3 size={18} class="mr-2" />
             Dashboard
           </a>
           <a
             href="/profile"
-            class="block text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-md text-base font-medium flex items-center"
+            class="text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-md text-base font-medium flex items-center"
           >
             <User size={18} class="mr-2" />
-            {$userStore.user.username}
+            {$userStore?.user?.username ?? "Unknown"}
           </a>
         {:else}
           <div class="px-4 pt-2 pb-3">
