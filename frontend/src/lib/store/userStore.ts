@@ -1,7 +1,7 @@
 import { writable } from "svelte/store";
 import type { UserStoreType } from "../../types";
 
-export const userStore = writable<UserStoreType>({
+export const userStore = writable<UserStoreType | null>({
   user: {
     id: 0,
     username: "",
@@ -9,5 +9,5 @@ export const userStore = writable<UserStoreType>({
     created_at: "",
   },
   isLoggedIn: false,
-  // isLoading: false,
+  isLoading: false,
 });

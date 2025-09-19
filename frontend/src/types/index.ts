@@ -25,7 +25,7 @@ export interface UrlResponseType {
 export interface UserStoreType {
   user: UserType | null;
   isLoggedIn: boolean;
-  // isLoading : boolean
+  isLoading : boolean
 }
 
 type DeviceType = "desktop" | "mobile" | "bot";

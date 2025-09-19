@@ -17,6 +17,7 @@ axiosInstance.interceptors.response.use(
       userStore.set({
         user: null,
         isLoggedIn: false,
+        isLoading: false,
       });
       if (typeof window !== "undefined") {
         window.location.href = `${API_BASE_URL}/auth/login`;
