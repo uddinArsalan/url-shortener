@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/redis/go-redis/v9"
@@ -26,9 +27,12 @@ func InitRedis() error {
 	if err != nil {
 		return fmt.Errorf("failed to connect to Redis: %w", err)
 	}
-	err = rdb.XGroupCreateMkStream(ctx,"clicks:queue","click_worker","0").Err()
-	if err != nil {
+	err = rdb.XGroupCreateMkStream(ctx, "clicks:queue", "click_worker", "0").Err()
+	if err != nil && !strings.Contains(err.Error(), "BUSYGROUP") {
 		log.Printf("Error creating Redis stream group: %v", err)
+	} else if err != nil {
+		// group already exists
+		log.Println("Redis stream group already exists, continuing...")
 	}
 
 	fmt.Println("Connected to Redis successfully")

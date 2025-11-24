@@ -29,7 +29,7 @@ func Start() {
 
 	kcAuth, err := auth.InitKeycloak(ctx, cfg)
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to initialize Keycloak: %v", err)
 	}
 
 	r := mux.NewRouter()
