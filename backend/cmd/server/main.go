@@ -29,17 +29,16 @@ func Start() {
 
 	// quick fix will checkout again cause or issue
 	kcAuth, err := auth.InitKeycloak(ctx, cfg)
-	if err != nil {
-		log.Printf("Keycloak error: %v", err)
+	if err != nil || kcAuth == nil {
+		log.Fatalf("❌ Failed to initialize Keycloak (required): %v", err)
 	}
-	if kcAuth == nil {
-		log.Println("Keycloak disabled (rate limit or offline). Continuing without auth...")
-	}
+	log.Println("✅ Keycloak initialized successfully")
 
 	r := mux.NewRouter()
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
 
 	public := apiRouter.NewRoute().Subrouter()
+
 	public.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
 	public.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
 	protected := apiRouter.NewRoute().Subrouter()
