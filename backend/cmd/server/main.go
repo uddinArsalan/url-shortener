@@ -27,9 +27,13 @@ func Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// quick fix will checkout again cause or issue
 	kcAuth, err := auth.InitKeycloak(ctx, cfg)
 	if err != nil {
-		log.Fatalf("Failed to initialize Keycloak: %v", err)
+		log.Printf("Keycloak error: %v", err)
+	}
+	if kcAuth == nil {
+		log.Println("Keycloak disabled (rate limit or offline). Continuing without auth...")
 	}
 
 	r := mux.NewRouter()

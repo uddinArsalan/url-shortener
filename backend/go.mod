@@ -1,6 +1,6 @@
 module url_shortener
 
-go 1.23.5
+go 1.24.0
 
 require github.com/gorilla/mux v1.8.1
 
@@ -20,8 +20,8 @@ require (
 	github.com/oschwald/maxminddb-golang v1.13.0 // indirect
 	github.com/redis/go-redis/v9 v9.7.3
 	github.com/rs/cors v1.11.1
-	golang.org/x/crypto v0.36.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
 	golang.org/x/oauth2 v0.28.0
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/time v0.11.0
 )
