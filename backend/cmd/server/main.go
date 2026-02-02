@@ -27,11 +27,14 @@ func Start() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// quick fix will checkout again cause or issue
+	var kcAuth *auth.KeycloakAuth
+
 	kcAuth, err := auth.InitKeycloak(ctx, cfg)
 	if err != nil || kcAuth == nil {
-		log.Fatalf("❌ Failed to initialize Keycloak (required): %v", err)
+		log.Printf("⚠️ Keycloak initialization failed at startup: %v", err)
+		log.Println("Backend will still start. First login request will retry Keycloak discovery.")
 	}
+
 	log.Println("✅ Keycloak initialized successfully")
 
 	r := mux.NewRouter()

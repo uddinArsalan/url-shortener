@@ -58,6 +58,17 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
+	if kc.Provider == nil {
+		fmt.Println("⚠️ Lazy retry of Keycloak discovery...")
+		ctx := context.Background()
+		provider, err := tryDiscovery(ctx, fmt.Sprintf("%s/realms/%s", kc.Config.BaseURL, kc.Config.Realm))
+		if err != nil {
+			http.Error(w, "Keycloak temporarily unavailable, try again later", http.StatusServiceUnavailable)
+			return
+		}
+		kc.Provider = provider
+		kc.Oauth2Config.Endpoint = provider.Endpoint()
+	}
 	state, _ := generateRandString(16)
 	nonce, _ := generateRandString(16)
 
@@ -91,6 +102,17 @@ func HandleLogout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
+	if kc.Provider == nil {
+		fmt.Println("⚠️ Lazy retry of Keycloak discovery...")
+		ctx := context.Background()
+		provider, err := tryDiscovery(ctx, fmt.Sprintf("%s/realms/%s", kc.Config.BaseURL, kc.Config.Realm))
+		if err != nil {
+			http.Error(w, "Keycloak temporarily unavailable, try again later", http.StatusServiceUnavailable)
+			return
+		}
+		kc.Provider = provider
+		kc.Oauth2Config.Endpoint = provider.Endpoint()
+	}
 	ctx := context.Background()
 	verifier := kc.Provider.Verifier(kc.OIDCConfig)
 	state, err := r.Cookie("state")
