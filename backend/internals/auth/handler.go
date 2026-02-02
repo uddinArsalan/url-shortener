@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -55,6 +56,19 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	setCallbackCookie(w, r, "nonce", nonce)
 	http.Redirect(w, r, kc.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce)), http.StatusFound)
 }
+
+func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
+	 state, _ := generateRandString(16) 
+	 nonce, _ := generateRandString(16) 
+
+	 setCallbackCookie(w, r, "state", state) 
+	 setCallbackCookie(w, r, "nonce", nonce) 
+	 
+	 url := kc.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce)) 
+	 json.NewEncoder(w).Encode(map[string]string{
+        "auth_url": url,
+    })
+ }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	cookies := []string{"token", "state", "nonce"}

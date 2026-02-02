@@ -39,7 +39,7 @@ func Start() {
 
 	public := apiRouter.NewRoute().Subrouter()
 
-	public.HandleFunc("/auth/login", kcAuth.HandleLogin).Methods("GET")
+	public.HandleFunc("/auth/prelogin", kcAuth.PreLogin).Methods("GET")
 	public.HandleFunc("/auth/callback", kcAuth.HandleCallback).Methods("GET")
 	protected := apiRouter.NewRoute().Subrouter()
 	public.Use(middleware.PerClientRateLimiter)

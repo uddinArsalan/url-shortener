@@ -20,11 +20,12 @@ axiosInstance.interceptors.response.use(
         isLoading: false,
       });
       if (typeof window !== "undefined") {
-        window.location.href = `${API_BASE_URL}/auth/login`;
+        const res = await axiosInstance.get(`${API_BASE_URL}/auth/prelogin`);
+        window.location.href = res.data.auth_url;
       }
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;

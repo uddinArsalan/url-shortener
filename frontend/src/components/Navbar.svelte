@@ -1,4 +1,5 @@
 <script lang="ts">
+  import axios from "axios";
   import { API_BASE_URL } from "../constants";
   import { Menu, X, BarChart3, User, LogIn } from "@lucide/svelte";
   import { userStore } from "$lib/store/userStore";
@@ -8,7 +9,12 @@
     isMobileMenuOpen = !isMobileMenuOpen;
   }
   async function handleLogin() {
-    window.location.href = `${API_BASE_URL}/auth/login`;
+    const res = await axios.get(`${API_BASE_URL}/auth/prelogin`, {
+      withCredentials: true,
+    });
+
+    const { auth_url } = res.data;
+    window.location.href = auth_url;
   }
 </script>
 
@@ -16,7 +22,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between h-16 items-center">
       <div class="flex items-center">
-        <a href="/" class="flex-shrink-0 flex items-center">
+        <a href="/" class="shrink-0 flex items-center">
           <span class="text-2xl font-bold text-blue-600 font-mono">
             URL<span class="text-purple-600">Short</span>
           </span>
@@ -88,9 +94,7 @@
   {#if isMobileMenuOpen}
     <div class="md:hidden" id="mobile-menu">
       <div class="border-t pt-3 pb-3 space-y-2">
-        <p class="px-4 text-gray-500 italic text-base">
-          A distributed URL shortener
-        </p>
+        <p class="px-4 text-gray-500 italic text-base">A URL shortener</p>
 
         {#if $userStore.isLoggedIn}
           <a

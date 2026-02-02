@@ -1,5 +1,4 @@
 import axios from "../axios";
-import { API_BASE_URL } from "../../constants";
 
 export async function fetchUser() {
   try {
@@ -14,7 +13,6 @@ export async function fetchUser() {
 export async function logout() {
   try {
     await axios.get(`/auth/logout`);
-     window.location.href = `${API_BASE_URL}/auth/login`;
   } catch (error) {
     console.log("Error Logging out User ", error);
     if (error instanceof Error) {

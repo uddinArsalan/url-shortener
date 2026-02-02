@@ -13,7 +13,6 @@
 
   let props = $props();
   let { data }: { data: DeviceClick[] } = props;
-  console.log(data)
   let labels = data.map((d) => d.device);
   let clicks = data.map((d) => d.count);
   let chartData = {

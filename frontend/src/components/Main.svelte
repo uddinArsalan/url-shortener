@@ -39,7 +39,7 @@
   <div
     class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200"
   >
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-4">
+    <div class="bg-linear-to-r from-blue-600 to-purple-600 p-4">
       <h2 class="text-xl font-bold text-white text-center">URL Shortener</h2>
     </div>
 
@@ -88,7 +88,7 @@
           class="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm flex items-start"
           role="alert"
         >
-          <AlertCircle class="mr-2 flex-shrink-0" size={20} />
+          <AlertCircle class="mr-2 shrink-0" size={20} />
           <span>{error}</span>
         </div>
       {/if}
@@ -102,7 +102,7 @@
             <a
               href={shortUrl}
               target="_blank"
-              class="text-blue-600 font-medium hover:text-blue-800 truncate mr-2 flex-grow flex items-center"
+              class="text-blue-600 font-medium hover:text-blue-800 truncate mr-2 grow flex items-center"
               aria-label="Open shortened URL in new tab"
             >
               {shortUrl}
