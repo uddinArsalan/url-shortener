@@ -34,7 +34,7 @@ func setCallbackCookie(w http.ResponseWriter, r *http.Request, name string, valu
 		Value:    value,
 		Path:     "/",
 		MaxAge:   int(time.Hour.Seconds()),
-		Secure: true,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
 	}
@@ -58,17 +58,21 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 }
 
 func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
-	 state, _ := generateRandString(16) 
-	 nonce, _ := generateRandString(16) 
+	state, _ := generateRandString(16)
+	nonce, _ := generateRandString(16)
 
-	 setCallbackCookie(w, r, "state", state) 
-	 setCallbackCookie(w, r, "nonce", nonce) 
-	 
-	 url := kc.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce)) 
-	 json.NewEncoder(w).Encode(map[string]string{
-        "auth_url": url,
-    })
- }
+	setCallbackCookie(w, r, "state", state)
+	setCallbackCookie(w, r, "nonce", nonce)
+
+	url := kc.Oauth2Config.AuthCodeURL(state, oidc.Nonce(nonce))
+	if err := json.NewEncoder(w).Encode(map[string]string{
+		"auth_url": url,
+	}); err != nil {
+		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		return
+	}
+
+}
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) {
 	cookies := []string{"token", "state", "nonce"}
@@ -173,7 +177,7 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Path:     "/",
 		HttpOnly: true,
-		Secure: true,
+		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 		MaxAge:   int(24 * time.Hour.Seconds()),
 	})
