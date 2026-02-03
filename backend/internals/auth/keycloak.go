@@ -104,7 +104,7 @@ func InitKeycloak(ctx context.Context, cfg config.KeycloakConfig) (*KeycloakAuth
 	if err != nil {
 		// Log a warning but return a partially initialized KeycloakAuth
 		// Provider is nil, discovery will be retried lazily
-		fmt.Printf("⚠️ Keycloak initialization failed at startup: %v\n", err)
+		fmt.Printf("Keycloak initialization failed at startup: %v\n", err)
 	}
 
 	oidcConfig := &oidc.Config{
@@ -115,8 +115,12 @@ func InitKeycloak(ctx context.Context, cfg config.KeycloakConfig) (*KeycloakAuth
 		ClientID:     cfg.ClientID,
 		ClientSecret: cfg.ClientSecret,
 		RedirectURL:  cfg.RedirectURL,
-		Endpoint:     provider.Endpoint(),
+		// Endpoint:     provider.Endpoint(),
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
+	}
+	
+	if provider != nil {
+		oauth2Config.Endpoint = provider.Endpoint()
 	}
 
 	ka := &KeycloakAuth{

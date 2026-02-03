@@ -59,7 +59,7 @@ func (kc *KeycloakAuth) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
 	if kc.Provider == nil {
-		fmt.Println("⚠️ Lazy retry of Keycloak discovery...")
+		fmt.Println("Lazy retry of Keycloak discovery...")
 		ctx := context.Background()
 		provider, err := tryDiscovery(ctx, fmt.Sprintf("%s/realms/%s", kc.Config.BaseURL, kc.Config.Realm))
 		if err != nil {
@@ -67,7 +67,9 @@ func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		kc.Provider = provider
-		kc.Oauth2Config.Endpoint = provider.Endpoint()
+		if provider != nil {
+			kc.Oauth2Config.Endpoint = provider.Endpoint()
+		}
 	}
 	state, _ := generateRandString(16)
 	nonce, _ := generateRandString(16)
@@ -111,7 +113,9 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		kc.Provider = provider
-		kc.Oauth2Config.Endpoint = provider.Endpoint()
+		if provider != nil {
+			kc.Oauth2Config.Endpoint = provider.Endpoint()
+		}
 	}
 	ctx := context.Background()
 	verifier := kc.Provider.Verifier(kc.OIDCConfig)
