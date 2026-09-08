@@ -7,8 +7,8 @@
 
   let props = $props();
   let { data }: { data: CountryClick[] } = props;
-  let labels = data.map((d) => d.country);
-  let clicks = data.map((d) => d.count);
+  let labels = data?.map((d) => d?.country);
+  let clicks = data?.map((d) => d?.count);
   let chartData = {
     labels,
     datasets: [

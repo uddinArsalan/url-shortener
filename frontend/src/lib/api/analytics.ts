@@ -14,18 +14,18 @@ export async function getAnalyticsData(urlId: string) {
     const res = await axios.get(`/analytics?urlId=${urlId}`);
     return res.data as ClickAnalyticsResponseType;
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }
 export async function getHourlyClicksData(urlId: string, from: Date, to: Date) {
   try {
     const res = await axios.get(
-      `/analytics/${urlId}/hourly?from=${from.toISOString()}&to=${to.toISOString()}`
+      `/analytics/${urlId}/hourly?from=${from.toISOString()}&to=${to.toISOString()}`,
     );
     return res.data as HourlyClick[];
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }
@@ -35,16 +35,16 @@ export async function getCountryClicksData(urlId: string) {
     const res = await axios.get(`/analytics/${urlId}/country`);
     return res.data as CountryClick[];
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }
-export async function getCityClicksData(urlId: string) {
+export async function getCityClicksData(urlId: string, cookieHeader?: string) {
   try {
     const res = await axios.get(`/analytics/${urlId}/city`);
     return res.data as CityClick[];
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }
@@ -54,7 +54,7 @@ export async function getReferrerClicksData(urlId: string) {
     const res = await axios.get(`/analytics/${urlId}/referrer`);
     return res.data as ReferrerClick[];
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }
@@ -64,7 +64,7 @@ export async function getBrowserClicksData(urlId: string) {
     const res = await axios.get(`/analytics/${urlId}/browser`);
     return res.data as BrowserClick[];
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }
@@ -74,7 +74,7 @@ export async function getDeviceClicksData(urlId: string) {
     const res = await axios.get(`/analytics/${urlId}/device`);
     return res.data as DeviceClick[];
   } catch (error) {
-    console.error("Error fetching analytics data:", error);
+    console.error("Error fetching analytics data:\n");
     throw error;
   }
 }

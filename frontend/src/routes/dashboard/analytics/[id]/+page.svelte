@@ -7,7 +7,7 @@
     MousePointerClick,
     Users,
   } from "@lucide/svelte";
-  import type { AnalyticsType } from "./+page";
+  import type { AnalyticsType } from "./+page.ts";
   import { getDeviceIcon } from "$lib/utils";
   import CountryClicks from "../../../../components/CountryClicks.svelte";
   import HourlyClicks from "../../../../components/HourlyClicks.svelte";
@@ -39,7 +39,7 @@
           <div>
             <p class="text-gray-600">Unique Clicks</p>
             <h3 class="text-2xl font-bold">
-              {data.analyticsData.unique_clicks}
+              {data?.analyticsData?.unique_clicks}
             </h3>
           </div>
         </div>
@@ -141,9 +141,7 @@
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
                     <Link2 class="w-4 h-4" />
-                    <span class="truncate max-w-xs"
-                      >{click?.os}</span
-                    >
+                    <span class="truncate max-w-xs">{click?.os}</span>
                   </div>
                 </td>
                 <td class="px-6 py-4">

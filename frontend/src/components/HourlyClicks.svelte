@@ -9,8 +9,8 @@
 
   let props = $props();
   let { data }: { data: HourlyClick[] } = props;
-  const labels = data.map((d) => format(d.hour, "MMM d, h aa"));
-  const clicks = data.map((d) => d.count);
+  const labels = data?.map((d) => format(d?.hour, "MMM d, h aa"));
+  const clicks = data?.map((d) => d?.count);
 
   let hourlyClicksData = {
     labels,

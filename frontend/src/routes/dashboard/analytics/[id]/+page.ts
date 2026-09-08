@@ -51,7 +51,6 @@ export const load: PageLoad = async ({ params }) => {
     };
   } catch (error) {
     console.error("LOAD ERROR:", error);
-    throw error;
   }
 };
 

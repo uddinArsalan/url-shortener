@@ -13,8 +13,8 @@
 
   let props = $props();
   let { data }: { data: DeviceClick[] } = props;
-  let labels = data.map((d) => d.device);
-  let clicks = data.map((d) => d.count);
+  let labels = data?.map((d) => d?.device);
+  let clicks = data?.map((d) => d?.count);
   let chartData = {
     labels,
     datasets: [
@@ -58,5 +58,5 @@
 
 <div class="bg-white rounded-lg shadow p-6">
   <h2 class="text-xl font-semibold mb-4">Clicks by Device</h2>
-  <canvas id="device" class="w-full h-[400px]"></canvas>
+  <canvas id="device" class="w-full h-100"></canvas>
 </div>

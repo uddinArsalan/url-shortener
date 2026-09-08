@@ -45,8 +45,7 @@
             <span>Dashboard</span>
           </a>
 
-          <a
-            href="/profile"
+          <div
             class="flex items-center text-gray-600 hover:text-blue-600 px-3 py-2 rounded-md transition-colors"
             aria-label="View profile"
           >
@@ -54,7 +53,7 @@
             <span class="font-medium"
               >{$userStore?.user?.username ?? "Unknown"}</span
             >
-          </a>
+        </div>
         {:else}
           <button
             class="text-gray-700 font-medium py-2 px-4 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors flex items-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -102,7 +101,6 @@
             Dashboard
           </a>
           <div
-            // href="/profile"
             class="text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-md text-base font-medium flex items-center"
           >
             <User size={18} class="mr-2" />

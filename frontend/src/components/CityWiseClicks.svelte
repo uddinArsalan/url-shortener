@@ -14,8 +14,8 @@
 
   let props = $props();
   let { data }: { data: CityClick[] } = props;
-  let labels = data.map((d) => d.city);
-  let clicks = data.map((d) => d.count);
+  let labels = data?.map((d) => d?.city);
+  let clicks = data?.map((d) => d?.count);
   let chartData = {
     labels,
     datasets: [

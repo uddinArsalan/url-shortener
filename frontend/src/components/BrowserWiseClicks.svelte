@@ -13,8 +13,8 @@
 
   let props = $props();
   let { data }: { data: BrowserClick[] } = props;
-  let labels = data.map((d) => d.browser);
-  let clicks = data.map((d) => d.count);
+  let labels = data?.map((d) => d?.browser);
+  let clicks = data?.map((d) => d?.count);
   let chartData = {
     labels,
     datasets: [
