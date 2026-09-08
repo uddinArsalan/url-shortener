@@ -28,6 +28,7 @@ axiosInstance.interceptors.response.use(
 );
 
 export function setLoggingOut(value: boolean) {
+  userStore.set({ user: null, isLoggedIn: false, isLoading: false });
   isLoggingOut = value;
 }
 

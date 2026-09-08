@@ -34,7 +34,6 @@
         </div>
       </div>
 
-      <!-- Desktop Navigation -->
       <div class="hidden md:flex items-center space-x-6">
         {#if $userStore.isLoggedIn}
           <a
@@ -102,13 +101,13 @@
             <BarChart3 size={18} class="mr-2" />
             Dashboard
           </a>
-          <a
-            href="/profile"
+          <div
+            // href="/profile"
             class="text-gray-600 hover:bg-gray-50 hover:text-blue-600 px-4 py-2 rounded-md text-base font-medium flex items-center"
           >
             <User size={18} class="mr-2" />
             {$userStore?.user?.username ?? "Unknown"}
-          </a>
+        </div>
         {:else}
           <div class="px-4 pt-2 pb-3">
             <button

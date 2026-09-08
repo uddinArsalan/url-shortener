@@ -58,5 +58,5 @@
 
 <div class="bg-white rounded-lg shadow p-6">
   <h2 class="text-xl font-semibold mb-4">Clicks by Browser</h2>
-  <canvas id="browser" class="w-full h-[400px]"></canvas>
+  <canvas id="browser" class="w-full h-100"></canvas>
 </div>
