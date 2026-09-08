@@ -151,13 +151,16 @@ func FindUrlsFromUserId(userId string, limit int, cursor string) (models.URLResp
 		}
 		urls = append(urls, url)
 	}
+	if err := rows.Err(); err != nil {
+		return models.URLResponse{}, err
+	}
 	var nextCursor string
 	var hasMore bool
 	if len(urls) > limit {
 		hasMore = true
 		urls = urls[:limit]
+		nextCursor = urls[len(urls)-1].CreatedAt.Format(time.RFC3339)
 	}
-	nextCursor = urls[len(urls)-1].CreatedAt.Format(time.RFC3339)
 
 	return models.URLResponse{
 		Urls: urls,

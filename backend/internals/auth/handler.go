@@ -71,8 +71,17 @@ func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
 			kc.Oauth2Config.Endpoint = provider.Endpoint()
 		}
 	}
-	state, _ := generateRandString(16)
-	nonce, _ := generateRandString(16)
+	state, err := generateRandString(16)
+	if err != nil {
+		http.Error(w, "Failed to generate state", http.StatusInternalServerError)
+		return
+	}
+
+	nonce, err := generateRandString(16)
+	if err != nil {
+		http.Error(w, "Failed to generate nonce", http.StatusInternalServerError)
+		return
+	}
 
 	setCallbackCookie(w, r, "state", state)
 	setCallbackCookie(w, r, "nonce", nonce)
