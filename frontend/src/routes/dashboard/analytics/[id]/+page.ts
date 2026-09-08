@@ -31,7 +31,7 @@ export const load: PageLoad = async ({ params }) => {
       deviceAnalyticsData,
       referrerAnalyticsData,
       cityAnalyticsData,
-    ] = await Promise.allSettled([
+    ] = await Promise.all([
       getAnalyticsData(urlId),
       getHourlyClicksData(urlId, startDate, endDate),
       getCountryClicksData(urlId),

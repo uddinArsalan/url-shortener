@@ -27,7 +27,7 @@
           <div>
             <p class="text-gray-600">Total Clicks</p>
             <h3 class="text-2xl font-bold">
-              {data.analyticsData.total_clicks}
+              {data?.analyticsData?.total_clicks}
             </h3>
           </div>
         </div>
@@ -49,27 +49,27 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Clicks by Country</h2>
-        <CountryClicks data={data.countryData} />
+        <CountryClicks data={data?.countryData} />
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Hourly Clicks</h2>
-        <HourlyClicks data={data.hourlyClicksData} />
+        <HourlyClicks data={data?.hourlyClicksData} />
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Clicks by Browser</h2>
-        <BrowserWiseClicks data={data.browserAnalyticsData} />
+        <BrowserWiseClicks data={data?.browserAnalyticsData} />
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Clicks by Device</h2>
-        <DeviceWiseClicks data={data.deviceAnalyticsData} />
+        <DeviceWiseClicks data={data?.deviceAnalyticsData} />
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Clicks by City</h2>
-        <CityWiseClicks data={data.cityAnalyticsData} />
+        <CityWiseClicks data={data?.cityAnalyticsData} />
       </div>
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-lg font-semibold mb-4">Referrer Clicks</h2>
-        <ReferrerClicks data={data.referrerAnalyticsData} />
+        <ReferrerClicks data={data?.referrerAnalyticsData} />
       </div>
     </div>
 
@@ -106,35 +106,35 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            {#each data.analyticsData.click_analytics as click}
+            {#each data?.analyticsData?.click_analytics as click}
               <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
                     <svelte:component
-                      this={getDeviceIcon(click.device)}
+                      this={getDeviceIcon(click?.device)}
                       class="w-4 h-4"
                     />
-                    <span class="capitalize">{click.device || "Desktop"}</span>
+                    <span class="capitalize">{click?.device || "Desktop"}</span>
                   </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
                     <Chrome class="w-4 h-4" />
-                    <span>{click.browser}</span>
-                    <span class="text-gray-500">({click.os})</span>
+                    <span>{click?.browser}</span>
+                    <span class="text-gray-500">({click?.os})</span>
                   </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
                     <MapPin class="w-4 h-4" />
-                    <span>{click.city}, {click.country}</span>
+                    <span>{click?.city}, {click?.country}</span>
                   </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
                     <Link2 class="w-4 h-4" />
                     <span class="truncate max-w-xs"
-                      >{click.referrer || "Direct"}</span
+                      >{click?.referrer || "Direct"}</span
                     >
                   </div>
                 </td>
@@ -142,14 +142,14 @@
                   <div class="flex items-center gap-2">
                     <Link2 class="w-4 h-4" />
                     <span class="truncate max-w-xs"
-                      >{click.os}</span
+                      >{click?.os}</span
                     >
                   </div>
                 </td>
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-2">
                     <Clock class="w-4 h-4" />
-                    <span>{new Date(click.timestamp).toLocaleString()}</span>
+                    <span>{new Date(click?.timestamp).toLocaleString()}</span>
                   </div>
                 </td>
               </tr>
