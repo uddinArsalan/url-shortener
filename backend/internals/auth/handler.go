@@ -112,9 +112,10 @@ func(kc *KeycloakAuth) HandleLogout(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteNoneMode,
 		})
 	}
+	postLoogoutRedirectUrl := os.Getenv("REDIRECT_URL")
 	logoutURL := fmt.Sprintf(
 		"%s/realms/%s/protocol/openid-connect/logout?post_logout_redirect_uri=%s",
-		kc.Config.BaseURL, kc.Config.Realm, url.QueryEscape(kc.Config.RedirectURL),
+		kc.Config.BaseURL, kc.Config.Realm, url.QueryEscape(postLoogoutRedirectUrl),
 	)
 	if idTokenHint != "" {
 		logoutURL += "&id_token_hint=" + url.QueryEscape(idTokenHint)
