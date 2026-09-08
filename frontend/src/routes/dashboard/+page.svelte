@@ -63,7 +63,7 @@
 
         <div class="flex items-center space-x-4">
           <span class="text-sm font-medium text-gray-800">
-            {$userStore.user.username}
+            {$userStore.user?.username}
           </span>
           <button
             onclick={() => logout()}
@@ -77,7 +77,7 @@
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    {#if isLoading && userUrls.length === 0}
+    {#if isLoading}
       <div class="flex justify-center items-center h-64">
         <Loader2 class="h-8 w-8 text-indigo-600 animate-spin" />
       </div>

@@ -177,7 +177,6 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user, err := db.FindUserByEmail(claims.Email)
-	fmt.Println("User found :", user, "Error", err)
 	if err == sql.ErrNoRows {
 		user = models.User{
 			Username: claims.Name,
