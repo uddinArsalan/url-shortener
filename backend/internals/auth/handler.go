@@ -10,6 +10,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 	"url_shortener/internals/db"
@@ -96,20 +97,30 @@ func (kc *KeycloakAuth) PreLogin(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func HandleLogout(w http.ResponseWriter, r *http.Request) {
-	cookies := []string{"token", "state", "nonce"}
+func(kc *KeycloakAuth) HandleLogout(w http.ResponseWriter, r *http.Request) {
+	idTokenCookie, err := r.Cookie("id_token")
+	var idTokenHint string
+	if err == nil {
+		idTokenHint = idTokenCookie.Value
+	}
+
+	cookies := []string{"token", "state", "nonce", "id_token"}
 	for _, cookie := range cookies {
 		http.SetCookie(w, &http.Cookie{
-			Name:     cookie,
-			Value:    "",
-			Path:     "/",
-			MaxAge:   -1,
-			HttpOnly: true,
-			Secure:   true,
+			Name: cookie, Value: "", Path: "/", MaxAge: -1,
+			Expires: time.Unix(0, 0), HttpOnly: true, Secure: true,
 			SameSite: http.SameSiteNoneMode,
 		})
 	}
-	// http.Redirect(w, r, "/auth/login", http.StatusFound)
+	logoutURL := fmt.Sprintf(
+		"%s/realms/%s/protocol/openid-connect/logout?post_logout_redirect_uri=%s",
+		kc.Config.BaseURL, kc.Config.Realm, url.QueryEscape(kc.Config.RedirectURL),
+	)
+	if idTokenHint != "" {
+		logoutURL += "&id_token_hint=" + url.QueryEscape(idTokenHint)
+	}
+
+	http.Redirect(w, r, logoutURL, http.StatusFound)
 }
 
 func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
@@ -148,6 +159,16 @@ func (kc *KeycloakAuth) HandleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No id_token field in oauth2 token.", http.StatusInternalServerError)
 		return
 	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "id_token",
+		Value:    rawIDToken,
+		Path:     "/",
+		MaxAge:   int(24 * time.Hour.Seconds()),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	})
 
 	idToken, err := verifier.Verify(ctx, rawIDToken)
 	if err != nil {

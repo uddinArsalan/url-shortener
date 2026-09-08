@@ -127,7 +127,7 @@ func FindUrlsFromUserId(userId string, limit int, cursor string) (models.URLResp
 	if err != nil {
 		return models.URLResponse{}, err
 	}
-	var urls []models.URL
+	urls := make([]models.URL, 0)
 	defer func() {
 		if err := stmt.Close(); err != nil {
 			log.Printf("Failed to close statement: %v", err)

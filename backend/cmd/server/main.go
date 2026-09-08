@@ -48,7 +48,7 @@ func Start() {
 	public.Use(middleware.PerClientRateLimiter)
 	protected.Use(middleware.AuthMiddleware)
 	protected.HandleFunc("/shorten", handler.ShortenURL).Methods("POST")
-	protected.HandleFunc("/auth/logout", auth.HandleLogout).Methods("GET")
+	protected.HandleFunc("/auth/logout", kcAuth.HandleLogout).Methods("GET")
 	public.HandleFunc("/url/{shortCode}", func(w http.ResponseWriter, r *http.Request) {
 		middleware.TrackClickMiddleware(http.HandlerFunc(handler.RedirectURL)).ServeHTTP(w, r)
 	}).Methods("GET")
