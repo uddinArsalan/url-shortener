@@ -68,7 +68,6 @@
         {/if}
       </div>
 
-      <!-- Mobile menu button -->
       <div class="flex md:hidden">
         <button
           type="button"
@@ -90,7 +89,6 @@
     </div>
   </div>
 
-  <!-- Mobile Menu -->
   {#if isMobileMenuOpen}
     <div class="md:hidden" id="mobile-menu">
       <div class="border-t pt-3 pb-3 space-y-2">

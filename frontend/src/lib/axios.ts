@@ -7,18 +7,17 @@ const axiosInstance = axios.create({
   withCredentials: true,
 });
 
+let isLoggingOut = false;
+let isRedirecting = false;
+
 axiosInstance.interceptors.response.use(
   function (response) {
     return response;
   },
   async function (error) {
-    // console.log("Error in Axios Interceptor: ", error);
-    if (error.response && error.response.status === 401) {
-      userStore.set({
-        user: null,
-        isLoggedIn: false,
-        isLoading: false,
-      });
+    if (error.response && error.response.status === 401 && !isLoggingOut && !isRedirecting) {
+      isRedirecting = true;
+      userStore.set({ user: null, isLoggedIn: false, isLoading: false });
       if (typeof window !== "undefined") {
         const res = await axiosInstance.get(`${API_BASE_URL}/auth/prelogin`);
         window.location.href = res.data.auth_url;
@@ -27,5 +26,9 @@ axiosInstance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
+
+export function setLoggingOut(value: boolean) {
+  isLoggingOut = value;
+}
 
 export default axiosInstance;

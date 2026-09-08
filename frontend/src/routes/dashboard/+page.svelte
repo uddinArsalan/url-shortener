@@ -23,6 +23,7 @@
       userUrls = urls.urls;
       hasMoreUrls = urls.pagination.has_more;
       nextCursor = urls.pagination.next_cursor;
+      console.log(userUrls)
     } catch (error) {
       console.error("Error fetching user URLs:", error);
     } finally {
@@ -66,7 +67,7 @@
             {$userStore.user?.username}
           </span>
           <button
-            onclick={() => logout()}
+            onclick={logout}
             class="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
           >
             Sign out
